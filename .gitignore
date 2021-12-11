@@ -1,0 +1,4 @@
+/target
+*.swo
+*.swp
+configuration.yaml
