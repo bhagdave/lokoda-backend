@@ -3,7 +3,7 @@
 DB_USER="root"
 DB_PASSWORD="h6redmine"
 DB_NAME="lokoda"
-DB_PORT="3600"
+DB_PORT="3306"
 
 export DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@localhost/${DB_NAME}
 

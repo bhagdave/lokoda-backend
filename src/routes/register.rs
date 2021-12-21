@@ -10,7 +10,8 @@ pub struct UserData {
 }
 
 pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
-    match sqlx::query!(
+    log::info!("Getting to the register function");
+    let insert = sqlx::query!(
         r#"
         INSERT INTO users (id, email, name, password)
         VALUES(?, ?, ?, ?)
@@ -20,12 +21,16 @@ pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) ->
         form.name,
         form.password
     ).execute(pool.get_ref())
-    .await
+    .await;
+    log::info!("Query executed!");
+    match insert
     {
         Ok(_) => {
+            log::info!("Worked");
             HttpResponse::Ok().finish()
         }
-        Err(_e) => {
+        Err(e) => {
+            log::error!("Failed to execute query: {:?}", e);
             HttpResponse::InternalServerError().finish()
         }
     }

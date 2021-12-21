@@ -13,7 +13,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
         App::new()
             .wrap(Logger::default())
             .route("/health_check", web::get().to(health_check))
-            .route("/register", web::get().to(register))
+            .route("/register", web::post().to(register))
             .app_data(db_pool.clone())
     })
     .listen(listener)?
