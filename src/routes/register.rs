@@ -8,24 +8,37 @@ pub struct UserData {
     email: String,
     name: String,
     password: String,
+    account_type: String,
+    location: String,
 }
 
 pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
     log::info!("Getting to the register function");
-    let password_hash = bcrypt::hash(&form.password,bcrypt::DEFAULT_COST);
+    let password_hash = match hash(&form.password,bcrypt::DEFAULT_COST)
+    {
+        Ok(hashed_password)=> {
+            log::info!("Password hashed");
+            hashed_password
+        }
+        Err(_e) => {
+            log::error!("Failed to encrypt password");
+            "".to_string()
+        }
+    };
     log::info!("{:?}", password_hash);
     let insert = sqlx::query!(
         r#"
-        INSERT INTO users (id, email, name, password)
-        VALUES(?, ?, ?, ?)
+        INSERT INTO users (id, email, name, password, account_type, location)
+        VALUES(?, ?, ?, ?, ?, ?)
         "#,
         Uuid::new_v4(),
         form.email,
         form.name,
-        form.password
+        password_hash,
+        form.account_type,
+        form.location
     ).execute(pool.get_ref())
     .await;
-    log::info!("Query executed!");
     match insert
     {
         Ok(_) => {
