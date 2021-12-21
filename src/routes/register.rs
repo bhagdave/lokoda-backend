@@ -1,6 +1,7 @@
 use sqlx::MySqlPool;
 use uuid::Uuid;
 use actix_web::{web, HttpResponse};
+use bcrypt::*;
 
 #[derive(serde::Deserialize)]
 pub struct UserData {
@@ -11,6 +12,8 @@ pub struct UserData {
 
 pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
     log::info!("Getting to the register function");
+    let password_hash = bcrypt::hash(&form.password,bcrypt::DEFAULT_COST);
+    log::info!("{:?}", password_hash);
     let insert = sqlx::query!(
         r#"
         INSERT INTO users (id, email, name, password)
