@@ -13,11 +13,9 @@ pub struct UserData {
 }
 
 pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
-    log::info!("Getting to the register function");
     let password_hash = match hash(&form.password,bcrypt::DEFAULT_COST)
     {
         Ok(hashed_password)=> {
-            log::info!("Password hashed");
             hashed_password
         }
         Err(_e) => {
@@ -25,7 +23,6 @@ pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) ->
             "".to_string()
         }
     };
-    log::info!("{:?}", password_hash);
     let insert = sqlx::query!(
         r#"
         INSERT INTO users (id, email, name, password, account_type, location)
@@ -42,7 +39,6 @@ pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) ->
     match insert
     {
         Ok(_) => {
-            log::info!("Worked");
             HttpResponse::Ok().finish()
         }
         Err(e) => {
