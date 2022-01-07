@@ -1,5 +1,4 @@
 use sqlx::MySqlPool;
-use uuid::Uuid;
 use actix_web::{web, HttpResponse};
 use bcrypt::*;
 
@@ -25,10 +24,9 @@ pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) ->
     };
     let insert = sqlx::query!(
         r#"
-        INSERT INTO users (id, email, name, password, account_type, location)
-        VALUES(?, ?, ?, ?, ?, ?)
+        INSERT INTO users (email, name, password, account_type, location)
+        VALUES(?, ?, ?, ?, ?)
         "#,
-        Uuid::new_v4(),
         form.email,
         form.name,
         password_hash,
