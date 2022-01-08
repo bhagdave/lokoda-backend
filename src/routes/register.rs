@@ -1,5 +1,6 @@
 use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
+use actix_web::http::header::ContentType;
 use bcrypt::*;
 
 #[derive(serde::Deserialize)]
@@ -11,7 +12,7 @@ pub struct UserData {
     location: String,
 }
 
-pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
+pub async fn register(form: web::Json<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
     let password_hash = match hash(&form.password,bcrypt::DEFAULT_COST)
     {
         Ok(hashed_password)=> {
@@ -37,7 +38,7 @@ pub async fn register(form: web::Form<UserData>, pool: web::Data<MySqlPool>,) ->
     match insert
     {
         Ok(_) => {
-            HttpResponse::Ok().finish()
+            HttpResponse::Ok().insert_header(ContentType::json()).body("data")
         }
         Err(e) => {
             log::error!("Failed to execute query: {:?}", e);
