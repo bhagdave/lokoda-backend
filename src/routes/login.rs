@@ -1,6 +1,7 @@
 use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use bcrypt::*;
+use actix_web::http::header::ContentType;
 
 #[derive(serde::Deserialize)]
 pub struct LoginData {
@@ -13,8 +14,9 @@ pub struct ResetPassword {
     email: String,
 }
 
-pub async fn login(form: web::Form<LoginData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
+pub async fn login(form: web::Json<LoginData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
     log::info!("Getting to the Login function");
+    log::info!("email required is {}", form.email);
     // get user from database table
     let user_record = sqlx::query_as!(LoginData,
         r#"
@@ -36,7 +38,7 @@ pub async fn login(form: web::Form<LoginData>, pool: web::Data<MySqlPool>,) -> H
                 Ok(verified) => {
                     if verified {
                         log::info!("Logged in okay");
-                        HttpResponse::Ok().finish()
+                        HttpResponse::Ok().insert_header(ContentType::json()).body("data")
                     } else {
                         log::error!("Failed to login");
                         HttpResponse::InternalServerError().finish()
