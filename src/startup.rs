@@ -5,6 +5,7 @@ use actix_web::{web, App, middleware, HttpServer};
 use actix_web::middleware::Logger;
 use sqlx::MySqlPool;
 use std::net::TcpListener;
+use actix_session::{CookieSession};
 
 
 pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io::Error> {
@@ -12,6 +13,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
     let server = HttpServer::new(move|| {
         App::new()
             .wrap(middleware::DefaultHeaders::new().header("Access-Control-Allow-Origin", "*")) // for testing purposes only
+            .wrap(CookieSession::signed(&[0; 32]).secure(false))
             .wrap(Logger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/register", web::post().to(register))
