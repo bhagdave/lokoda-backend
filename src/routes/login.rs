@@ -3,17 +3,7 @@ use actix_web::{web, HttpResponse};
 use bcrypt::*;
 use actix_web::http::header::ContentType;
 use actix_session::{Session};
-
-#[derive(serde::Deserialize)]
-pub struct LoginData {
-    email: String,
-    password: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct ResetPassword {
-    email: String,
-}
+use crate::models::{LoginData, ResetPassword};
 
 pub async fn login(session: Session, form: web::Json<LoginData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
     log::info!("Getting to the Login function");
