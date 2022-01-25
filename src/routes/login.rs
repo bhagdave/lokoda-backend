@@ -60,7 +60,7 @@ pub async fn login(session: Session, form: web::Json<LoginData>, pool: web::Data
 
 }
 
-pub async fn reset_password(form: web::Form<ResetPassword>, pool: web::Data<MySqlPool>) -> HttpResponse {
+pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySqlPool>) -> HttpResponse {
     log::info!("Password reset request!");
     // get user from database table
     let user_record = sqlx::query_as!(LoginData,
