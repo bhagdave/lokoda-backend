@@ -1,24 +1,42 @@
-use lettre::transport::smtp::authentication::Credentials;
-use lettre::{Message, SmtpTransport, Transport};
+use lettre::smtp::authentication::{Credentials, Mechanism};
+use lettre::{ClientSecurity, ClientTlsParameters,  SmtpClient, Transport};
+use native_tls::{Protocol, TlsConnector};
+use lettre::smtp::ConnectionReuseParameters;
+use lettre::smtp::extension::ClientId;
+use lettre_email::EmailBuilder;
+use crate::configuration::*;
 
 pub fn send_email(to: &str, from: &str, subject: &str, body: &str){
-    let email = Message::builder()
-        .from(from.parse().unwrap())
-        .to(to.parse().unwrap())
+    let configuration = get_configuration().expect("Failed to read configuration.");
+    println!("Smtp Host:{}", &configuration.email.host);
+    let email = EmailBuilder::new()
+        .from(from)
+        .to(to)
         .subject(subject)
-        .body(String::from(body))
+        .text(String::from(body))
+        .build()
         .unwrap();
 
-    let creds = Credentials::new("smtp_username".to_string(), "smtp_password".to_string());
-
+    let creds = Credentials::new(configuration.email.username.to_string(), configuration.email.password.to_string());
+    let mut tls_builder = TlsConnector::builder();
+    // Disable as many security features as possible ( no luck :( )
+    tls_builder.min_protocol_version(Some(Protocol::Sslv3));
+    tls_builder.use_sni(false);
+    tls_builder.danger_accept_invalid_certs(true);
+    tls_builder.danger_accept_invalid_hostnames(true);
+    let tls_parameters =
+        ClientTlsParameters::new(
+            configuration.email.host.to_string(),
+            tls_builder.build().unwrap()
+        );
     // Open a remote connection to gmail
-    let mailer = SmtpTransport::relay("smtp.gmail.com")
+    let mut mailer = SmtpClient::new((configuration.email.host.to_string(), configuration.email.port), ClientSecurity::Required(tls_parameters))
         .unwrap()
         .credentials(creds)
-        .build();
+        .transport();
 
     // Send the email
-    match mailer.send(&email) {
+    match mailer.send(email.into()) {
         Ok(_) => println!("Email sent successfully!"),
         Err(e) => panic!("Could not send email: {:?}", e),
     }

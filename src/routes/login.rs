@@ -1,3 +1,4 @@
+use crate::emails::send_email;
 use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use bcrypt::*;
@@ -76,9 +77,10 @@ pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySq
     .await;
     match user_record
     {
-        Ok(_record) => {
+        Ok(record) => {
             log::info!("Found user");
             // TODO - Send email
+            send_email(&record.email, "david.g.h.gill@gmail.com","Password reset request","Hello");  
             HttpResponse::Ok().finish()
         }
         Err(e) => {

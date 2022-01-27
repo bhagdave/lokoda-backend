@@ -8,3 +8,9 @@ database:
     username: "root"
     password: "h6redmine"
     database_name: "lokoda"
+email:
+    host: "smtp.mailtrap.io"
+    port: 2525
+    username: "c933b743432546"
+    password: "33c8bd61bd8d45"
+
