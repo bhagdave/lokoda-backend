@@ -16,6 +16,12 @@ pub struct ResetPassword {
     email: String,
 }
 
+#[derive(serde::Deserialize)]
+pub struct UpdatePassword {
+    hash: String,
+    password: String,
+}
+
 pub async fn login(session: Session, form: web::Json<LoginData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
     log::info!("Getting to the Login function");
     log::info!("email required is {}", form.email);
@@ -88,4 +94,8 @@ pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySq
             HttpResponse::InternalServerError().finish()
         }
     }
+}
+
+pub async fn update_password(_form: web::Json<UpdatePassword>, pool: web::Data<MySqlPool>) -> HttpResponse {
+    HttpResponse::Ok().finish()
 }
