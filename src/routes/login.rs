@@ -4,10 +4,11 @@ use actix_web::{web, HttpResponse};
 use bcrypt::*;
 use actix_web::http::header::ContentType;
 use actix_session::{Session};
+use guid_create::GUID;
 
 #[derive(serde::Deserialize)]
 pub struct LoginData {
-    email: String,
+    pub email: String,
     password: String,
 }
 
@@ -84,10 +85,28 @@ pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySq
     match user_record
     {
         Ok(record) => {
-            log::info!("Found user");
-            // TODO - Send email
-            send_email(&record.email, "david.g.h.gill@gmail.com","Password reset request","Hello");  
-            HttpResponse::Ok().finish()
+            let guid = GUID::rand();
+            log::info!("Found user and creating guid of {}", guid.to_string());
+            let update = sqlx::query!(
+                r#"
+                UPDATE users SET remember_token = ?
+                WHERE email = ?
+                "#,
+                guid.to_string(),
+                record.email
+            ).execute(pool.get_ref()).await;
+            match update
+            {
+                Ok(_) => {
+                    let message = format!("Hello please visit http://lokoda.co.uk/{}", guid.to_string());
+                    send_email(&record.email, "david.g.h.gill@gmail.com","Password reset request",&message);  
+                    HttpResponse::Ok().finish()
+                }
+                Err(e) => {
+                    log::error!("Unable to update user {:?}", e);
+                    HttpResponse::InternalServerError().finish()
+                }
+            }
         }
         Err(e) => {
             log::error!("Unable to find user {:?}", e);
