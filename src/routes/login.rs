@@ -152,7 +152,7 @@ pub async fn update_password(form: web::Json<UpdatePassword>, pool: web::Data<My
                     "".to_string()
                 }
             };
-            // TODO - Update database
+            // Update database
             match password_hash.chars().count()
             {
                 0 => {
