@@ -1,8 +1,6 @@
-use lettre::smtp::authentication::{Credentials, Mechanism};
+use lettre::smtp::authentication::Credentials;
 use lettre::{ClientSecurity, ClientTlsParameters,  SmtpClient, Transport};
 use native_tls::{Protocol, TlsConnector};
-use lettre::smtp::ConnectionReuseParameters;
-use lettre::smtp::extension::ClientId;
 use lettre_email::EmailBuilder;
 use crate::configuration::*;
 
