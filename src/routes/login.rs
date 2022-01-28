@@ -7,6 +7,12 @@ use actix_session::{Session};
 use guid_create::GUID;
 
 #[derive(serde::Deserialize)]
+pub struct SimpleUser {
+    email: String,
+    id: String,
+}
+
+#[derive(serde::Deserialize)]
 pub struct LoginData {
     pub email: String,
     password: String,
@@ -19,7 +25,8 @@ pub struct ResetPassword {
 
 #[derive(serde::Deserialize)]
 pub struct UpdatePassword {
-    hash: String,
+    email: String,
+    remember_token: String,
     password: String,
 }
 
@@ -98,7 +105,7 @@ pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySq
             match update
             {
                 Ok(_) => {
-                    let message = format!("Hello please visit http://lokoda.co.uk/{}", guid.to_string());
+                    let message = format!("Hello please visit http://lokoda.co.uk/update-password/{}", guid.to_string());
                     send_email(&record.email, "david.g.h.gill@gmail.com","Password reset request",&message);  
                     HttpResponse::Ok().finish()
                 }
@@ -115,6 +122,70 @@ pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySq
     }
 }
 
-pub async fn update_password(_form: web::Json<UpdatePassword>, pool: web::Data<MySqlPool>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub async fn update_password(form: web::Json<UpdatePassword>, pool: web::Data<MySqlPool>) -> HttpResponse {
+    log::info!("update password request!");
+    // get user from database table
+    let user_record = sqlx::query_as!(SimpleUser,
+        r#"
+            SELECT email, id
+            FROM users
+            WHERE email = ?
+            AND remember_token = ?
+            LIMIT 1
+        "#,
+        form.email,
+        form.remember_token
+    )
+    .fetch_one(pool.get_ref())
+    .await;
+    match user_record
+    {
+        Ok(record) => {
+            // Hash Password
+            let password_hash = match hash(&form.password,bcrypt::DEFAULT_COST)
+            {
+                Ok(hashed_password)=> {
+                    hashed_password
+                }
+                Err(_e) => {
+                    log::error!("Failed to encrypt password");
+                    "".to_string()
+                }
+            };
+            // TODO - Update database
+            match password_hash.chars().count()
+            {
+                0 => {
+                    log::error!("Unable to hash password");
+                    HttpResponse::InternalServerError().finish()
+                }
+                _ => {
+                    let update = sqlx::query!(
+                            r#"
+                            UPDATE users SET password = ?
+                            WHERE id = ?
+                            "#,
+                            password_hash,
+                            record.id
+                        ).execute(pool.get_ref()).await;
+                        match update
+                        {
+                            Ok(_) => {
+                                let message = format!("Hi your password has been changed");
+                                send_email(&record.email, "david.g.h.gill@gmail.com","Password reset success",&message);  
+                                HttpResponse::Ok().finish()
+                            }
+                            Err(e) => {
+                                log::error!("Unable to update user {:?}", e);
+                                HttpResponse::InternalServerError().finish()
+                            }
+                        }
+                }
+            }
+        }
+        Err(e) => {
+            log::error!("Unable to find user {:?}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }
