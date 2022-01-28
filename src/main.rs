@@ -9,7 +9,6 @@ async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let configuration = get_configuration().expect("Failed to read configuration.");
     println!("DB String:{}", &configuration.database.connection_string());
-    println!("Smtp Host:{}", &configuration.email.host);
     let connection_pool = MySqlPoolOptions::new()
         .connect_timeout(std::time::Duration::from_secs(2))
         .connect_lazy(&configuration.database.connection_string())
