@@ -17,6 +17,12 @@ pub struct Genre {
 }
 
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct UserGenre {
+    user_id: String,
+    genre_id: i32,
+
+}
 pub async fn get_genres(session: Session,pool: web::Data<MySqlPool>)-> HttpResponse{
     let logged_in = session.get::<i32>("logged_in");
     match logged_in {
@@ -49,5 +55,40 @@ pub async fn get_genres(session: Session,pool: web::Data<MySqlPool>)-> HttpRespo
             HttpResponse::Ok().json("Somat went wrong")
         }
     }
+}
 
+pub async fn add_genre(session : Session, form: web::Json<UserGenre>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<i32>("logged_in");
+    match logged_in {
+        Ok(Some(x)) => {
+            if x == 1 {
+                let insert = sqlx::query!(
+                    r#"
+                    INSERT INTO user_genres (genre_id, user_id)
+                    VALUES(?, ?)
+                    "#,
+                    form.genre_id,
+                    form.user_id,
+                ).execute(pool.get_ref())
+                .await;
+                match insert {
+                    Ok(_) => {
+                        HttpResponse::Ok().json("Genre Added")
+                    }
+                    Err(e) => {
+                        log::error!("Failed to execute query: {:?}", e);
+                        HttpResponse::InternalServerError().finish()
+                    }
+                }
+            } else {
+                HttpResponse::Ok().json("not logged_in")
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
 }
