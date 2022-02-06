@@ -57,8 +57,9 @@ pub async fn get_genres(session: Session,pool: web::Data<MySqlPool>)-> HttpRespo
     }
 }
 
-pub async fn add_genre(session : Session, form: web::Json<UserGenre>, pool: web::Data<MySqlPool>) -> HttpResponse{
+pub async fn add_genre(session: Session, form: web::Json<UserGenre>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<i32>("logged_in");
+    let _user_id = session.get::<String>("user_id");
     match logged_in {
         Ok(Some(x)) => {
             if x == 1 {
@@ -80,6 +81,26 @@ pub async fn add_genre(session : Session, form: web::Json<UserGenre>, pool: web:
                         HttpResponse::InternalServerError().finish()
                     }
                 }
+            } else {
+                HttpResponse::Ok().json("not logged_in")
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
+
+pub async fn get_user_genres(session: Session, _pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<i32>("logged_in");
+    match logged_in {
+        Ok(Some(x)) => {
+            if x == 1 {
+                // Need to know the user id.
+                HttpResponse::Ok().json("logged in")
             } else {
                 HttpResponse::Ok().json("not logged_in")
             }

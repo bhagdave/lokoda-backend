@@ -14,6 +14,13 @@ pub struct SimpleUser {
 
 #[derive(serde::Deserialize)]
 pub struct LoginData {
+    id: String,
+    pub email: String,
+    password: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct LoginForm {
     pub email: String,
     password: String,
 }
@@ -30,13 +37,13 @@ pub struct UpdatePassword {
     password: String,
 }
 
-pub async fn login(session: Session, form: web::Json<LoginData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
+pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> HttpResponse{
     log::info!("Getting to the Login function");
     log::info!("email required is {}", form.email);
     // get user from database table
     let user_record = sqlx::query_as!(LoginData,
         r#"
-            SELECT email, password
+            SELECT id, email, password
             FROM users
             WHERE email = ?
             LIMIT 1
@@ -54,7 +61,8 @@ pub async fn login(session: Session, form: web::Json<LoginData>, pool: web::Data
                 Ok(verified) => {
                     if verified {
                         log::info!("Logged in okay");
-                        let _session_result =session.insert("logged_in", 1);
+                        let _result = session.insert("logged_in", 1);
+                        let _result = session.insert("user_id", record.id);
                         HttpResponse::Ok().insert_header(ContentType::json()).body("data")
                     } else {
                         log::error!("Failed to login");
@@ -80,7 +88,7 @@ pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySq
     // get user from database table
     let user_record = sqlx::query_as!(LoginData,
         r#"
-            SELECT email, password
+            SELECT id, email, password
             FROM users
             WHERE email = ?
             LIMIT 1
