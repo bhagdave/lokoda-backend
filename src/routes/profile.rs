@@ -10,7 +10,7 @@ pub async fn profile_update() -> HttpResponse{
     HttpResponse::Ok().finish()
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Genre {
     id: i32,
     genre: String,
@@ -26,7 +26,6 @@ pub async fn get_genres(session: Session,pool: web::Data<MySqlPool>)-> HttpRespo
                     r#"
                         SELECT id, genre
                         FROM genres
-                        LIMIT 1
                     "#
                 )
                 .fetch_all(pool.get_ref())
@@ -44,25 +43,7 @@ pub async fn get_genres(session: Session,pool: web::Data<MySqlPool>)-> HttpRespo
             }
         }
         Ok(None) => {
-            // this is in this section just for testing purposes.
-                let genres = sqlx::query_as!(Genre,
-                    r#"
-                        SELECT id, genre
-                        FROM genres
-                        LIMIT 1
-                    "#
-                )
-                .fetch_all(pool.get_ref())
-                .await;
-                match genres {
-                    Ok(records) => {
-                        HttpResponse::Ok().json(records)
-                    }
-                    Err(_) => {
-                        HttpResponse::Ok().json("No Genres found")
-                    }
-                }
-                //HttpResponse::Ok().json("no session")
+            HttpResponse::Ok().json("no session")
         }
         Err(_) => {
             HttpResponse::Ok().json("Somat went wrong")
