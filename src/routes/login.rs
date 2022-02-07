@@ -1,4 +1,5 @@
 use crate::emails::send_email;
+use crate::models::users::*;
 use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use bcrypt::*;
@@ -10,19 +11,6 @@ use guid_create::GUID;
 pub struct SimpleUser {
     email: String,
     id: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct LoginData {
-    id: String,
-    pub email: String,
-    password: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct LoginForm {
-    pub email: String,
-    password: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -60,9 +48,8 @@ pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data
             match verify(&form.password, &record.password) {
                 Ok(verified) => {
                     if verified {
-                        log::info!("Logged in okay");
                         let _result = session.insert("logged_in", 1);
-                        let _result = session.insert("user_id", record.id);
+                        let _result = session.insert("session", record.id);
                         HttpResponse::Ok().insert_header(ContentType::json()).body("data")
                     } else {
                         log::error!("Failed to login");
