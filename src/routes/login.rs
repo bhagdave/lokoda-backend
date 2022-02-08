@@ -51,14 +51,7 @@ pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySq
         Ok(record) => {
             let guid = GUID::rand();
             log::info!("Found user and creating guid of {}", guid.to_string());
-            let update = sqlx::query!(
-                r#"
-                UPDATE users SET remember_token = ?
-                WHERE email = ?
-                "#,
-                guid.to_string(),
-                record.email
-            ).execute(pool.get_ref()).await;
+            let update = set_remember_token(&record.email, &pool).await;
             match update
             {
                 Ok(_) => {
