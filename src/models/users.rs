@@ -2,6 +2,23 @@ use actix_web::web;
 use sqlx::MySqlPool;
 
 #[derive(serde::Deserialize)]
+pub struct SimpleUser {
+    pub email: String,
+    pub id: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct ResetPassword {
+    pub email: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct UpdatePassword {
+    pub email: String,
+    pub remember_token: String,
+    pub password: String,
+}
+#[derive(serde::Deserialize)]
 pub struct LoginData {
     pub id: String,
     pub email: String,

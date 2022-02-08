@@ -7,23 +7,6 @@ use actix_web::http::header::ContentType;
 use actix_session::{Session};
 use guid_create::GUID;
 
-#[derive(serde::Deserialize)]
-pub struct SimpleUser {
-    email: String,
-    id: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct ResetPassword {
-    email: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct UpdatePassword {
-    email: String,
-    remember_token: String,
-    password: String,
-}
 
 pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> HttpResponse{
     log::info!("Getting to the Login function");
