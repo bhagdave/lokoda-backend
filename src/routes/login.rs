@@ -28,7 +28,7 @@ pub struct UpdatePassword {
 pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> HttpResponse{
     log::info!("Getting to the Login function");
     log::info!("email required is {}", form.email);
-    let user_record = get_login_data(&form, pool).await;
+    let user_record = get_login_data(&form.email, &pool).await;
     match user_record
     {
         Ok(record) => {
@@ -62,17 +62,7 @@ pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data
 pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySqlPool>) -> HttpResponse {
     log::info!("Password reset request!");
     // get user from database table
-    let user_record = sqlx::query_as!(LoginData,
-        r#"
-            SELECT id, email, password
-            FROM users
-            WHERE email = ?
-            LIMIT 1
-        "#,
-        form.email
-    )
-    .fetch_one(pool.get_ref())
-    .await;
+    let user_record = get_login_data(&form.email, &pool).await;
     match user_record
     {
         Ok(record) => {
