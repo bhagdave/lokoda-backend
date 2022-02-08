@@ -15,7 +15,7 @@ pub struct LoginForm {
 }
 
 
-pub async fn get_login_data(form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
+pub async fn get_login_data(form: &web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
     // get user from database table
     let user_record = sqlx::query_as!(LoginData,
         r#"
