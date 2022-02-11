@@ -98,14 +98,7 @@ pub async fn update_password(form: web::Json<UpdatePassword>, pool: web::Data<My
                     HttpResponse::InternalServerError().finish()
                 }
                 _ => {
-                    let update = sqlx::query!(
-                            r#"
-                            UPDATE users SET password = ?
-                            WHERE id = ?
-                            "#,
-                            password_hash,
-                            record.id
-                        ).execute(pool.get_ref()).await;
+                    let update = update_user_password(&password_hash, &record.id, &pool).await;
                         match update
                         {
                             Ok(_) => {

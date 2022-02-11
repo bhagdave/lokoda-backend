@@ -33,7 +33,6 @@ pub struct LoginForm {
     pub password: String,
 }
 
-
 pub async fn get_login_data(email: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
     // get user from database table
     let user_record = sqlx::query_as!(LoginData,
@@ -81,4 +80,14 @@ pub async fn get_simple_user(form: &web::Json<UpdatePassword>, pool: &web::Data<
     user_record
 }
 
-
+pub async fn update_user_password(password: &str, id: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+    let update = sqlx::query!(
+            r#"
+            UPDATE users SET password = ?
+            WHERE id = ?
+            "#,
+            password,
+            id
+        ).execute(pool.get_ref()).await;
+    update
+}
