@@ -75,19 +75,7 @@ pub async fn reset_password(form: web::Json<ResetPassword>, pool: web::Data<MySq
 pub async fn update_password(form: web::Json<UpdatePassword>, pool: web::Data<MySqlPool>) -> HttpResponse {
     log::info!("update password request!");
     // get user from database table
-    let user_record = sqlx::query_as!(SimpleUser,
-        r#"
-            SELECT email, id
-            FROM users
-            WHERE email = ?
-            AND remember_token = ?
-            LIMIT 1
-        "#,
-        form.email,
-        form.remember_token
-    )
-    .fetch_one(pool.get_ref())
-    .await;
+    let user_record = get_simple_user(&form, &pool).await;
     match user_record
     {
         Ok(record) => {

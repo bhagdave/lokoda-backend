@@ -63,3 +63,22 @@ pub async fn set_remember_token(email: &str, pool: &web::Data<MySqlPool>) -> Res
     ).execute(pool.get_ref()).await;
     update
 }
+
+pub async fn get_simple_user(form: &web::Json<UpdatePassword>, pool: &web::Data<MySqlPool>) -> Result<SimpleUser, sqlx::Error> {
+    let user_record = sqlx::query_as!(SimpleUser,
+        r#"
+            SELECT email, id
+            FROM users
+            WHERE email = ?
+            AND remember_token = ?
+            LIMIT 1
+        "#,
+        form.email,
+        form.remember_token
+    )
+    .fetch_one(pool.get_ref())
+    .await;
+    user_record
+}
+
+
