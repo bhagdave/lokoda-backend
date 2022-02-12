@@ -4,25 +4,30 @@ use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use bcrypt::*;
 use actix_web::http::header::ContentType;
-use actix_session::{Session};
 use guid_create::GUID;
 
 
-pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> HttpResponse{
+pub async fn login(form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> HttpResponse{
     log::info!("Getting to the Login function");
-    log::info!("email required is {}", form.email);
     let user_record = get_login_data(&form.email, &pool).await;
     match user_record
     {
         Ok(record) => {
-            log::info!("Found user");
             // check password against hashed password
             match verify(&form.password, &record.password) {
                 Ok(verified) => {
                     if verified {
-                        let _result = session.insert("logged_in", 1);
-                        let _result = session.insert("session", record.id);
-                        HttpResponse::Ok().insert_header(ContentType::json()).body("data")
+                        let token = create_session_token(&record.id, &pool).await;
+                        match token 
+                        {
+                            Ok(token) => {
+                                let response = format!("{{'token' : {}}}", token);
+                                HttpResponse::Ok().insert_header(ContentType::json()).body(response)
+                            }
+                            Err(_) => {
+                                HttpResponse::Ok().body("Unable to create session token")
+                            }
+                        }
                     } else {
                         log::error!("Failed to login");
                         HttpResponse::InternalServerError().finish()

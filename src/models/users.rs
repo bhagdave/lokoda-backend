@@ -20,6 +20,7 @@ pub struct UpdatePassword {
     pub remember_token: String,
     pub password: String,
 }
+
 #[derive(serde::Deserialize)]
 pub struct LoginData {
     pub id: String,
@@ -90,4 +91,27 @@ pub async fn update_user_password(password: &str, id: &str, pool: &web::Data<MyS
             id
         ).execute(pool.get_ref()).await;
     update
+}
+
+pub async fn create_session_token(id:&str, pool: &web::Data<MySqlPool>) -> Result<String, sqlx::Error> {
+    let token = GUID::rand();  
+    let insert = sqlx::query!(
+        r#"
+        INSERT INTO sessions (user, token)
+        VALUES(?, ?)
+        "#,
+        id,
+        token.to_string()
+    ).execute(pool.get_ref())
+    .await;
+    match insert 
+    {
+        Ok(_) => {
+            Ok(token.to_string())
+        }
+        Err(e) => {
+            log::error!("Unable to create token {:?}", e);
+            Err(e)
+        }
+    }
 }
