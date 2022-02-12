@@ -4,6 +4,15 @@ use sqlx::mysql::MySqlQueryResult;
 use guid_create::GUID;
 
 #[derive(serde::Deserialize)]
+pub struct UserData {
+    email: String,
+    name: String,
+    pub password: String,
+    account_type: String,
+    location: String,
+}
+
+#[derive(serde::Deserialize)]
 pub struct SimpleUser {
     pub email: String,
     pub id: String,
@@ -82,15 +91,14 @@ pub async fn get_simple_user(form: &web::Json<UpdatePassword>, pool: &web::Data<
 }
 
 pub async fn update_user_password(password: &str, id: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
-    let update = sqlx::query!(
+    sqlx::query!(
             r#"
             UPDATE users SET password = ?
             WHERE id = ?
             "#,
             password,
             id
-        ).execute(pool.get_ref()).await;
-    update
+        ).execute(pool.get_ref()).await
 }
 
 pub async fn create_session_token(id:&str, pool: &web::Data<MySqlPool>) -> Result<String, sqlx::Error> {
@@ -114,4 +122,19 @@ pub async fn create_session_token(id:&str, pool: &web::Data<MySqlPool>) -> Resul
             Err(e)
         }
     }
+}
+
+pub async fn register_new_user(form: &web::Json<UserData>, pool: &web::Data<MySqlPool>, pwdhash: &str) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        INSERT INTO users (email, name, password, account_type, location)
+        VALUES(?, ?, ?, ?, ?)
+        "#,
+        form.email,
+        form.name,
+        pwdhash,
+        form.account_type,
+        form.location
+    ).execute(pool.get_ref())
+    .await
 }
