@@ -4,10 +4,11 @@ use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use bcrypt::*;
 use actix_web::http::header::ContentType;
+use actix_session::{Session};
 use guid_create::GUID;
 
 
-pub async fn login(form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> HttpResponse{
+pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> HttpResponse{
     log::info!("Getting to the Login function");
     let user_record = get_login_data(&form.email, &pool).await;
     match user_record
@@ -21,6 +22,7 @@ pub async fn login(form: web::Json<LoginForm>, pool: web::Data<MySqlPool>) -> Ht
                         match token 
                         {
                             Ok(token) => {
+                                let _result = session.insert("tk",&token);
                                 let response = format!("{{'token' : {}}}", token);
                                 HttpResponse::Ok().insert_header(ContentType::json()).body(response)
                             }
