@@ -30,7 +30,10 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/register", web::post().to(register))
             .route("/login", web::post().to(login))
             .route("/reset_password", web::post().to(reset_password))
-            .route("/update_password", web::post().to(update_password))
+            .service(
+                web::resource("/update_password")
+                .route(web::post().to(update_password))
+            )
             .app_data(db_pool.clone())
     })
     .listen(listener)?
