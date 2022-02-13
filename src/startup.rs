@@ -21,6 +21,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/profile", web::get().to(profile_index))
             .route("/updte", web::post().to(profile_update))
             .route("/get_genres", web::get().to(get_genres))
+            .route("/get_user_genres", web::get().to(get_user_genres))
             .route("/add_genre", web::post().to(add_genre))
             .route("/messages", web::get().to(messages))
             .route("/newmessage", web::post().to(new_message))
@@ -29,7 +30,10 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/register", web::post().to(register))
             .route("/login", web::post().to(login))
             .route("/reset_password", web::post().to(reset_password))
-            .route("/update_password", web::post().to(update_password))
+            .service(
+                web::resource("/update_password")
+                .route(web::post().to(update_password))
+            )
             .app_data(db_pool.clone())
     })
     .listen(listener)?

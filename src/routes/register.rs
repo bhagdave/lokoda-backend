@@ -2,15 +2,8 @@ use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use actix_web::http::header::ContentType;
 use bcrypt::*;
+use crate::models::users::*;
 
-#[derive(serde::Deserialize)]
-pub struct UserData {
-    email: String,
-    name: String,
-    password: String,
-    account_type: String,
-    location: String,
-}
 
 pub async fn register(form: web::Json<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
     let password_hash = match hash(&form.password,bcrypt::DEFAULT_COST)
@@ -23,18 +16,7 @@ pub async fn register(form: web::Json<UserData>, pool: web::Data<MySqlPool>,) ->
             "".to_string()
         }
     };
-    let insert = sqlx::query!(
-        r#"
-        INSERT INTO users (email, name, password, account_type, location)
-        VALUES(?, ?, ?, ?, ?)
-        "#,
-        form.email,
-        form.name,
-        password_hash,
-        form.account_type,
-        form.location
-    ).execute(pool.get_ref())
-    .await;
+    let insert = register_new_user(&form, &pool, &password_hash).await;
     match insert
     {
         Ok(_) => {
