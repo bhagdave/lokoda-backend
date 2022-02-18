@@ -124,6 +124,27 @@ pub async fn create_session_token(id:&str, pool: &web::Data<MySqlPool>) -> Resul
     }
 }
 
+pub async fn check_session_token(token:&str, pool: &web::Data<MySqlPool>) -> Result<String, sqlx::Error> {
+    let result = sqlx::query!(
+        r#"
+        SELECT user FROM sessions 
+        WHERE token = ?
+        "#,
+        token
+    ).fetch_one(pool.get_ref())
+    .await;
+
+    match result
+    {
+        Ok(user) => {
+            Ok(user.user)
+        }
+        Err(e) => {
+            Err(e)
+        }
+    }
+}
+
 pub async fn register_new_user(form: &web::Json<UserData>, pool: &web::Data<MySqlPool>, pwdhash: &str) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"

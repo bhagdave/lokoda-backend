@@ -2,6 +2,7 @@ use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use actix_session::{Session};
 use serde::{Deserialize, Serialize};
+use crate::models::users::*;
 
 pub async fn profile_index() -> HttpResponse{
     HttpResponse::Ok().finish()
@@ -24,10 +25,11 @@ pub struct UserGenre {
 
 }
 pub async fn get_genres(session: Session,pool: web::Data<MySqlPool>)-> HttpResponse{
-    let logged_in = session.get::<i32>("logged_in");
+    let logged_in = session.get::<String>("tk");
     match logged_in {
-        Ok(Some(x)) => {
-            if x == 1 {
+        Ok(Some(token)) => {
+            let userid = create_session_token(&token, &pool).await;
+            if userid.is_ok() {
                 let genres = sqlx::query_as!(Genre,
                     r#"
                         SELECT id, genre
