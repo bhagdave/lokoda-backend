@@ -102,6 +102,22 @@ pub async fn update_user_password(password: &str, id: &str, pool: &web::Data<MyS
 }
 
 pub async fn create_session_token(id:&str, pool: &web::Data<MySqlPool>) -> Result<String, sqlx::Error> {
+    let existing_token = sqlx::query!(
+        r#"
+        SELECT token FROM sessions
+        WHERE user = ?
+        "#,
+        id
+    ).fetch_one(pool.get_ref())
+    .await;
+    match existing_token
+    {
+        Ok(record) => {
+            return Ok(record.token);
+        }
+        Err(_) => {
+        }
+    }
     let token = GUID::rand();  
     let insert = sqlx::query!(
         r#"

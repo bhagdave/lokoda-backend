@@ -28,7 +28,7 @@ pub async fn get_genres(session: Session,pool: web::Data<MySqlPool>)-> HttpRespo
     let logged_in = session.get::<String>("tk");
     match logged_in {
         Ok(Some(token)) => {
-            let userid = create_session_token(&token, &pool).await;
+            let userid = check_session_token(&token, &pool).await;
             if userid.is_ok() {
                 let genres = sqlx::query_as!(Genre,
                     r#"
