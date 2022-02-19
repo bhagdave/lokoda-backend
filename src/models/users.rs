@@ -106,6 +106,7 @@ pub async fn create_session_token(id:&str, pool: &web::Data<MySqlPool>) -> Resul
         r#"
         SELECT token FROM sessions
         WHERE user = ?
+        AND created > DATE_SUB(NOW(), INTERVAL 1 HOUR)
         "#,
         id
     ).fetch_one(pool.get_ref())
@@ -145,6 +146,7 @@ pub async fn check_session_token(token:&str, pool: &web::Data<MySqlPool>) -> Res
         r#"
         SELECT user FROM sessions 
         WHERE token = ?
+        AND created > DATE_SUB(NOW(), INTERVAL 1 HOUR)
         "#,
         token
     ).fetch_one(pool.get_ref())

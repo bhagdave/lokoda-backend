@@ -1,1 +1,1 @@
-curl -vv http://127.0.0.1:8888/get_genres -H "Content-Type: application/json" 
+curl -vv --cookie "actix-session=wmLpV%2FRIItZHiRx0+IZNABMB4NBonjJwJ5%2FOBk8rjT0%3D%7B%22tk%22%3A%22%5C%22AA674192-EAF5-39A5-D0E0-89936A1F6687%5C%22%22%7D;" http://127.0.0.1:8888/get_genres -H "Content-Type: application/json" 
