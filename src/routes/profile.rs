@@ -1,7 +1,6 @@
 use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use actix_session::{Session};
-use serde::{Deserialize, Serialize};
 use crate::models::users::*;
 use crate::models::genre::*;
 
@@ -82,7 +81,15 @@ pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> Ht
             {
                 Ok(user) => {
                     // Need to know the user id.
-                    HttpResponse::Ok().json("logged in")
+                    match get_user_genre_list(&user, &pool).await
+                    {
+                        Ok(records) => {
+                            HttpResponse::Ok().json(records)
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("Unable to obtain genres")
+                        }
+                    }
                 }
                 Err(_) => {
                     HttpResponse::Ok().json("not logged_in")
