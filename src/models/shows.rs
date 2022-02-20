@@ -12,6 +12,14 @@ pub struct Show {
     year: i32
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ShowDates {
+    user_id: Option<String>,
+    showdate: Option<String>,
+    venue: String,
+    city: String,
+}
+
 pub async fn add_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     let insert = sqlx::query!(
         r#"
@@ -37,5 +45,14 @@ pub async fn add_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data
     }
 }
 
-pub async fn get_user_shows(pool: &web::Data<MySqlPool>){
+pub async fn get_user_shows(pool: &web::Data<MySqlPool>) -> Result<Vec<ShowDates>,sqlx::Error> {
+    sqlx::query_as!(ShowDates,
+        r#"
+        SELECT user_id, date_format(showdate, "%d %m %y") as showdate, venue, city 
+        FROM showdates
+        WHERE
+            showdate > now()
+        "#
+    ).fetch_all(pool.get_ref())
+    .await
 }
