@@ -46,27 +46,22 @@ pub async fn add_genre(session: Session, form: web::Json<UserGenre>, pool: web::
     match logged_in {
         Ok(Some(token)) => {
             let userid = check_session_token(&token, &pool).await;
-            if userid.is_ok() {
-                let insert = sqlx::query!(
-                    r#"
-                    INSERT INTO user_genres (genre_id, user_id)
-                    VALUES(?, ?)
-                    "#,
-                    form.genre_id,
-                    form.user_id,
-                ).execute(pool.get_ref())
-                .await;
-                match insert {
-                    Ok(_) => {
-                        HttpResponse::Ok().json("Genre Added")
-                    }
-                    Err(e) => {
-                        log::error!("Failed to execute query: {:?}", e);
-                        HttpResponse::InternalServerError().finish()
+            match userid {
+                Ok(user) => {
+                    let insert = add_genre_to_user(&user, form.genre_id, &pool).await; 
+                    match insert {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Genre Added")
+                        }
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
                     }
                 }
-            } else {
-                HttpResponse::Ok().json("not logged_in")
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
             }
         }
         Ok(None) => {

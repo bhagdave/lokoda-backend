@@ -29,5 +29,23 @@ pub async fn get_genre_list(pool: &web::Data<MySqlPool>) -> Result<Vec<Genre>, s
     .await
 }
 
-pub async fn add_genre_to_user(pool: &web::Data<MySqlPool>) -> Result<(), sqlx::Error>{
+pub async fn add_genre_to_user(userid: &str, genre: i32, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    let insert = sqlx::query!(
+        r#"
+        INSERT INTO user_genres (genre_id, user_id)
+        VALUES(?, ?)
+        "#,
+        genre,
+        userid,
+    ).execute(pool.get_ref())
+    .await;
+    match insert {
+        Ok(record) => {
+            Ok(record)
+        }
+        Err(e) => {
+            log::error!("Failed to execute query: {:?}", e);
+            Err(e)
+        }
+    }
 }
