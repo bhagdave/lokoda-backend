@@ -3,6 +3,7 @@ use actix_web::{web, HttpResponse};
 use actix_session::{Session};
 use crate::models::users::*;
 use crate::models::genre::*;
+use crate::models::shows::*;
 
 pub async fn profile_index() -> HttpResponse{
     HttpResponse::Ok().finish()
@@ -85,6 +86,71 @@ pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> Ht
                     {
                         Ok(records) => {
                             HttpResponse::Ok().json(records)
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("Unable to obtain genres")
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
+
+pub async fn get_shows_for_profile(session: Session, profile: web::Json<Profile>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid 
+            {
+                Ok(_) => {
+                    // Need to know the user id.
+                    match get_user_shows(&profile.id, &pool).await
+                    {
+                        Ok(records) => {
+                            HttpResponse::Ok().json(records)
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("Unable to obtain genres")
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
+
+pub async fn add_show(session: Session, add_show: web::Json<Show>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid 
+            {
+                Ok(user) => {
+                    match add_user_show(&user, add_show, &pool).await
+                    {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Show added")
                         }
                         Err(_) => {
                             HttpResponse::Ok().json("Unable to obtain genres")
