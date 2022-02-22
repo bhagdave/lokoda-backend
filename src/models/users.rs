@@ -43,6 +43,10 @@ pub struct LoginForm {
     pub password: String,
 }
 
+#[derive(serde::Deserialize)]
+pub struct AddUrl {
+    pub url: String,
+}
 
 #[derive(serde::Deserialize)]
 pub struct Profile {
@@ -180,6 +184,30 @@ pub async fn register_new_user(form: &web::Json<UserData>, pool: &web::Data<MySq
         pwdhash,
         form.account_type,
         form.location
+    ).execute(pool.get_ref())
+    .await
+}
+
+pub async fn add_embed_url_to_user(user: &str, url: &web::Json<AddUrl>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        UPDATE users SET embed_url = ? 
+        WHERE users.id = ?
+        "#,
+        url.url,
+        user
+    ).execute(pool.get_ref())
+    .await
+}
+
+pub async fn add_image_url_to_user(user: &str, url: &web::Json<AddUrl>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        UPDATE users SET image_url = ?
+        WHERE users.id = ?
+        "#,
+        url.url,
+        user
     ).execute(pool.get_ref())
     .await
 }
