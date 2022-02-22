@@ -45,14 +45,16 @@ pub async fn add_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data
     }
 }
 
-pub async fn get_user_shows(pool: &web::Data<MySqlPool>) -> Result<Vec<ShowDates>,sqlx::Error> {
+pub async fn get_user_shows(userid: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<ShowDates>,sqlx::Error> {
     sqlx::query_as!(ShowDates,
         r#"
         SELECT user_id, date_format(showdate, "%d %m %y") as showdate, venue, city 
         FROM showdates
         WHERE
             showdate > now()
-        "#
+            AND user_id = ?
+        "#,
+        userid
     ).fetch_all(pool.get_ref())
     .await
 }

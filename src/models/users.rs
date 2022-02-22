@@ -43,6 +43,12 @@ pub struct LoginForm {
     pub password: String,
 }
 
+
+#[derive(serde::Deserialize)]
+pub struct Profile {
+    pub id: String,
+}
+
 pub async fn get_login_data(email: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
     // get user from database table
     let user_record = sqlx::query_as!(LoginData,
