@@ -121,7 +121,7 @@ pub async fn get_shows_for_profile(session: Session, profile: web::Json<Profile>
                             HttpResponse::Ok().json(records)
                         }
                         Err(_) => {
-                            HttpResponse::Ok().json("Unable to obtain genres")
+                            HttpResponse::Ok().json("Unable to obtain shows")
                         }
                     }
                 }
