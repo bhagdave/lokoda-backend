@@ -1,0 +1,98 @@
+Lokoda Back end API
+
+The api is the same url as the front end site just apended with /api.  So that would make it http://lokoda.co.uk/api/.  All the calls detailed below require this url at the start. It will not be repeated below for brevity.
+
+Health check
+URL:/health_check
+Parameters:N/A
+Type:N/A
+
+Used just to check and make sure that the backend is operational
+
+Registration and Login
+
+Register
+URL:/register
+Parameters:email, name, password, account_type, location
+Type:JSON ARRAY
+
+On success returns a 200 ok with "data" in the body.
+
+Login
+URL:/login
+Parameters:email, password
+Type:JSON ARRAY
+
+Returns a cookie that will need to be stored and used in subsequent calls.  Also returns a json array with the token being used for the login.  Lgins do expire so at some stage this token or your cookie will stop working.
+
+Reset password
+URL:/reset_password
+Parameters:email
+Type:JSON ARRAY
+
+Profile based stuff
+
+Get Genres
+URL:/get_genres
+Parameters:N/A
+Type:N/A
+Cookie:Valid session cookie required
+
+Returns various:-
+"not logged in" - If the request does not contain a cookie that matches one for a logged in user.
+An array of Genres in JSON format
+[{"id":1,"genre":"Alternative"},{"id":2,"genre":"Blues"},{"id":3,"genre":"Classic Rock"},{"id":4,"genre":"Country"},{"id":5,"genre":"Emo"},{"id":6,"genre":"Folk"},{"id":7,"genre":"Grime"},{"id":8,"genre":"Grunge"},{"id":9,"genre":"Hardcore"},{"id":10,"genre":"Hip Hop"},{"id":11,"genre":"Metal"},{"id":12,"genre":"Pop"}]
+
+Get user genres
+URL:/get_user_genres
+Parameters:N/A
+Type:N/A
+Cookie:Valid session cookie required
+
+This returns the genres for the current logged in user only. In the same format as the above call or empty array if none set.
+
+Add Genre
+URL:/add_genre
+Parameters:user_id, genre_id
+Type:JSON ARRAY
+Cookie:Valid session cookie required
+
+Returns Various:
+"not logged in" - No valid session
+"Genre Added" - Genre added
+
+Get shows for profile
+URL:/get_shows_for_profile
+Parameters:id (of the profile you want to see)
+Type:JSON ARRAY
+
+Returns a JSON array of shows for that user
+or - "not logged in"
+or - "unable to obtain genres" - A BUG
+or - "error"
+or - "No Session"
+
+Add Show to own profile
+URL:/add_show
+Parameters:city, venue, day (int), month (int), year (int)
+Type:JSON ARRAY
+
+On success returns "Show Added"
+
+Add image to own profile
+URL:/add_image
+Parameters:url 
+Type:JSON ARRAY
+
+On success returns "Image url added"
+
+Add embedded music player URL
+URL:/add_embed_url
+Parameters:url 
+Type:JSON ARRAY
+
+On success returns "Url embedded"
+
+
+
+
