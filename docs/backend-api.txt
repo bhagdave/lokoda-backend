@@ -61,6 +61,17 @@ Returns Various:
 "not logged in" - No valid session
 "Genre Added" - Genre added
 
+Get genres for profile
+URL:/get_genres_for_profile
+Parameters:id (of the profile you want to see)
+Type:JSON ARRAY
+
+Returns a JSON array of genres for that user
+or - "not logged in"
+or - "unable to obtain genres"
+or - "error"
+or - "No Session"
+
 Get shows for profile
 URL:/get_shows_for_profile
 Parameters:id (of the profile you want to see)
