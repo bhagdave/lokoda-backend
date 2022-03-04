@@ -1,1 +1,1 @@
-curl -vv --cookie "actix-session=scyTP2S3wC1xjYGw+iMOWjU8ackNSin4tcm+e3sZd9E%3D%7B%22tk%22%3A%22%5C%22BFFFF214-E05A-888B-14CF-F37480CC9D00%5C%22%22%7D;" http://lokoda.co.uk/api/get_user_genres -H "Content-Type: application/json" 
+curl -vv --cookie "actix-session=UaqV6FZAX3c19OH8ywBVt1yTrtY03I1hKGzUPFyreYg%3D%7B%22tk%22%3A%22%5C%22D4D915DA-9FA8-8956-50B6-11555FFCFE12%5C%22%22%7D;" http://lokoda.co.uk/api/get_user_genres -H "Content-Type: application/json" 
