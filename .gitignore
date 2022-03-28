@@ -3,3 +3,5 @@
 *.swp
 configuration.yaml
 tags
+yarn.lock
+/node_modules
