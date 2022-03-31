@@ -12,31 +12,14 @@ pub async fn profile_update() -> HttpResponse{
     HttpResponse::Ok().finish()
 }
 
-pub async fn get_genres(session: Session,pool: web::Data<MySqlPool>)-> HttpResponse{
-    let logged_in = session.get::<String>("tk");
-    match logged_in {
-        Ok(Some(token)) => {
-            let userid = check_session_token(&token, &pool).await;
-            if userid.is_ok() {
-                let genres = get_genre_list(&pool).await;
-                match genres {
-                    Ok(records) => {
-                        HttpResponse::Ok().json(records)
-                    }
-                    Err(_) => {
-                        HttpResponse::Ok().json("No Genres found")
-                    }
-                }
-            } else {
-                HttpResponse::Ok().json("not logged_in")
-            }
-        }
-        Ok(None) => {
-            log::error!("no token found");
-            HttpResponse::Ok().json("no session")
+pub async fn get_genres(pool: web::Data<MySqlPool>)-> HttpResponse{
+    let genres = get_genre_list(&pool).await;
+    match genres {
+        Ok(records) => {
+            HttpResponse::Ok().json(records)
         }
         Err(_) => {
-            HttpResponse::Ok().json("Somat went wrong")
+            HttpResponse::Ok().json("No Genres found")
         }
     }
 }
