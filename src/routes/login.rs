@@ -23,7 +23,7 @@ pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data
                         {
                             Ok(token) => {
                                 let _result = session.insert("tk",&token);
-                                let response = format!("{{'token' : {}}}", token);
+                                let response = format!("{{\"token\" : \"{}\", \"id\" : \"{}\"}}", token ,record.id);
                                 HttpResponse::Ok().insert_header(ContentType::json()).body(response)
                             }
                             Err(_) => {
