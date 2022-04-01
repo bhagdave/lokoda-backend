@@ -2,6 +2,8 @@ use actix_web::web;
 use sqlx::MySqlPool;
 use sqlx::mysql::MySqlQueryResult;
 use guid_create::GUID;
+use serde::{Serialize};
+
 
 #[derive(serde::Deserialize)]
 pub struct UserData {
@@ -51,6 +53,32 @@ pub struct AddUrl {
 #[derive(serde::Deserialize)]
 pub struct Profile {
     pub id: String,
+}
+
+#[derive(serde::Deserialize, Serialize)]
+pub struct ProfileData {
+    id: String,
+    email: String,
+    account_type: String,
+    location: String,
+    embed_url: Option<String>,
+    image_url: Option<String>
+}
+
+pub async fn get_profile_data(user: &str, pool: &web::Data<MySqlPool>) -> Result<ProfileData, sqlx::Error> {
+    // get user profile from database table
+    let profile_record = sqlx::query_as!(ProfileData,
+        r#"
+            SELECT id, email, account_type, location, embed_url, image_url
+            FROM users
+            WHERE id = ?
+            LIMIT 1
+        "#,
+        user
+    )
+    .fetch_one(pool.get_ref())
+    .await;
+    profile_record
 }
 
 pub async fn get_login_data(email: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {

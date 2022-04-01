@@ -5,8 +5,40 @@ use crate::models::users::*;
 use crate::models::genre::*;
 use crate::models::shows::*;
 
-pub async fn profile_index() -> HttpResponse{
-    HttpResponse::Ok().finish()
+pub async fn profile_index(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            log::info!("Got tk from session");
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    log::info!("Got user from check_session_token");
+                    match get_profile_data(&user, &pool).await {
+                        Ok(profile) => {
+                            HttpResponse::Ok().json(profile)
+                        }
+                        Err(e) => {
+                            log::error!("Whoops: {:?}", e);
+                            HttpResponse::Ok().json("Error")
+                        }
+                    }
+                }
+                Err(e) => {
+                    log::error!("Got user from check_session_token : {:?}", e);
+                    HttpResponse::Ok().json("not logged_in but have a cookie?")
+                }
+            }
+        }
+        Ok(None) => {
+            log::info!("Was not able to get tk from session cookie");
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(e) => {
+            log::error!("Whoops: {:?}", e);
+            HttpResponse::Ok().json("Error")
+        }
+    }
 }
 pub async fn profile_update() -> HttpResponse{
     HttpResponse::Ok().finish()
