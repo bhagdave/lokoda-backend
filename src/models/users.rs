@@ -58,6 +58,7 @@ pub struct Profile {
 #[derive(serde::Deserialize, Serialize)]
 pub struct ProfileData {
     id: String,
+    name: String,
     email: String,
     account_type: String,
     location: String,
@@ -69,7 +70,7 @@ pub async fn get_profile_data(user: &str, pool: &web::Data<MySqlPool>) -> Result
     // get user profile from database table
     let profile_record = sqlx::query_as!(ProfileData,
         r#"
-            SELECT id, email, account_type, location, embed_url, image_url
+            SELECT id, name, email, account_type, location, embed_url, image_url
             FROM users
             WHERE id = ?
             LIMIT 1
