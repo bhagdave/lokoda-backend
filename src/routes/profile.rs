@@ -39,31 +39,10 @@ pub async fn profile_index(session: Session, pool: web::Data<MySqlPool>) -> Http
     }
 }
 
-pub async fn get_profile(user_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
-    let logged_in = session.get::<String>("tk");
-    match logged_in {
-        Ok(Some(token)) => {
-            match check_session_token(&token, &pool).await {
-                Ok(_) => {
-                    match get_profile_data(&user_id, &pool).await {
-                        Ok(profile) => {
-                            HttpResponse::Ok().json(profile)
-                        }
-                        Err(e) => {
-                            log::error!("Whoops: {:?}", e);
-                            HttpResponse::Ok().json("Error")
-                        }
-                    }
-                }
-                Err(e) => {
-                    log::error!("Got user from check_session_token : {:?}", e);
-                    HttpResponse::Ok().json("not logged_in but have a cookie?")
-                }
-            }
-        }
-        Ok(None) => {
-            log::info!("Was not able to get tk from session cookie");
-            HttpResponse::Ok().json("No Session")
+pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    match get_profile_data(&user_id, &pool).await {
+        Ok(profile) => {
+            HttpResponse::Ok().json(profile)
         }
         Err(e) => {
             log::error!("Whoops: {:?}", e);
@@ -153,68 +132,28 @@ pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> Ht
     }
 }
 
-pub async fn get_genres_for_profile(session: Session, profile: web::Json<Profile>, pool: web::Data<MySqlPool>) -> HttpResponse{
-    let logged_in = session.get::<String>("tk");
-    match logged_in {
-        Ok(Some(token)) => {
-            let userid = check_session_token(&token, &pool).await;
-            match userid 
-            {
-                Ok(_) => {
-                    // Need to know the user id.
-                    match get_user_genre_list(&profile.id, &pool).await
-                    {
-                        Ok(records) => {
-                            HttpResponse::Ok().json(records)
-                        }
-                        Err(_) => {
-                            HttpResponse::Ok().json("Unable to obtain genres")
-                        }
-                    }
-                }
-                Err(_) => {
-                    HttpResponse::Ok().json("not logged_in")
-                }
-            }
-        }
-        Ok(None) => {
-            HttpResponse::Ok().json("No Session")
+pub async fn get_genres_for_profile(profile: web::Json<Profile>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    // Need to know the user id.
+    match get_user_genre_list(&profile.id, &pool).await
+    {
+        Ok(records) => {
+            HttpResponse::Ok().json(records)
         }
         Err(_) => {
-            HttpResponse::Ok().json("Error")
+            HttpResponse::Ok().json("Unable to obtain genres")
         }
     }
 }
 
-pub async fn get_shows_for_profile(session: Session, profile: web::Json<Profile>, pool: web::Data<MySqlPool>) -> HttpResponse{
-    let logged_in = session.get::<String>("tk");
-    match logged_in {
-        Ok(Some(token)) => {
-            let userid = check_session_token(&token, &pool).await;
-            match userid 
-            {
-                Ok(_) => {
-                    // Need to know the user id.
-                    match crate::models::shows::get_user_shows(&profile.id, &pool).await
-                    {
-                        Ok(records) => {
-                            HttpResponse::Ok().json(records)
-                        }
-                        Err(_) => {
-                            HttpResponse::Ok().json("Unable to obtain shows")
-                        }
-                    }
-                }
-                Err(_) => {
-                    HttpResponse::Ok().json("not logged_in")
-                }
-            }
-        }
-        Ok(None) => {
-            HttpResponse::Ok().json("No Session")
+pub async fn get_shows_for_profile(profile: web::Json<Profile>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    // Need to know the user id.
+    match crate::models::shows::get_user_shows(&profile.id, &pool).await
+    {
+        Ok(records) => {
+            HttpResponse::Ok().json(records)
         }
         Err(_) => {
-            HttpResponse::Ok().json("Error")
+            HttpResponse::Ok().json("Unable to obtain shows")
         }
     }
 }
