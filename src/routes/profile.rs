@@ -99,6 +99,38 @@ pub async fn add_genre(session: Session, form: web::Json<UserGenre>, pool: web::
     }
 }
 
+pub async fn delete_genre(session: Session, form: web::Json<UserGenre>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    let delete = delete_genre_from_user(&user, form.genre_id, &pool).await; 
+                    match delete {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Genre Removed")
+                        }
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
+
 pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {

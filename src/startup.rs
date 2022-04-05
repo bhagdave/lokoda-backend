@@ -25,6 +25,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/get_user_genres", web::get().to(get_user_genres))
             .route("/get_genres_for_profile", web::get().to(get_genres_for_profile))
             .route("/add_genre", web::post().to(add_genre))
+            .route("/delete_genre", web::post().to(delete_genre))
             .route("/get_shows_for_profile", web::get().to(get_shows_for_profile))
             .route("/add_show", web::post().to(add_show))
             .route("/get_user_shows", web::get().to(get_user_shows))

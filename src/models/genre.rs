@@ -55,6 +55,27 @@ pub async fn add_genre_to_user(userid: &str, genre: i32, pool: &web::Data<MySqlP
     }
 }
 
+pub async fn delete_genre_from_user(userid: &str, genre: i32, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    let delete = sqlx::query!(
+        r#"
+        DELETE FROM user_genres 
+        WHERE genre_id = ? AND user_id = ?
+        "#,
+        genre,
+        userid,
+    ).execute(pool.get_ref())
+    .await;
+    match delete {
+        Ok(record) => {
+            Ok(record)
+        }
+        Err(e) => {
+            log::error!("Failed to execute query: {:?}", e);
+            Err(e)
+        }
+    }
+}
+
 pub async fn get_user_genre_list(userid: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<UserGenreList>, sqlx::Error>{
     sqlx::query_as!(UserGenreList,
         r#"
