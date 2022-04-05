@@ -20,6 +20,7 @@ pub struct UserGenre {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct UserGenreList {
     genre: String,
+    genre_id: i32,
 }
 
 pub async fn get_genre_list(pool: &web::Data<MySqlPool>) -> Result<Vec<Genre>, sqlx::Error> {
@@ -57,7 +58,7 @@ pub async fn add_genre_to_user(userid: &str, genre: i32, pool: &web::Data<MySqlP
 pub async fn get_user_genre_list(userid: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<UserGenreList>, sqlx::Error>{
     sqlx::query_as!(UserGenreList,
         r#"
-            SELECT genre
+            SELECT genre, genre_id
             FROM genres, user_genres
             WHERE user_id = ?
             AND genres.id = user_genres.genre_id
