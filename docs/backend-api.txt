@@ -105,12 +105,14 @@ On success returns "Image url removed"
 
 
 Add embedded music player URL
-URL:/add_embed_url
+URL:/embed_url
 Parameters:url 
 Type:JSON ARRAY
 
 On success returns "Url embedded"
 
+un-embedded music player URL
+URL:/unembed_url
+Parameters:NONE 
 
-
-
+On success returns "Url unembedded"
