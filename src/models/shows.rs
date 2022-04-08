@@ -56,6 +56,7 @@ pub async fn get_user_shows(userid: &str, pool: &web::Data<MySqlPool>) -> Result
         WHERE
             showdate > now()
             AND user_id = ?
+        ORDER BY showdate
         "#,
         userid
     ).fetch_all(pool.get_ref())
