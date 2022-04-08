@@ -90,6 +90,13 @@ Type:JSON ARRAY
 
 On success returns "Show Added"
 
+Cancel Show on own profile
+URL:/cancel_show
+Parameters:show id sent in path
+Type:url path eg cancel_show/1
+
+On success returns "Show Added"
+
 Add image to own profile
 URL:/add_image
 Parameters:url 
