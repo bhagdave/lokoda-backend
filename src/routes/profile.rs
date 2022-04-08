@@ -287,6 +287,38 @@ pub async fn add_embed_url(session: Session, add_url: web::Json<AddUrl>, pool: w
     }
 }
 
+pub async fn delete_embed_url(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid 
+            {
+                Ok(user) => {
+                    match delete_embed_url_from_user(&user, &pool).await
+                    {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Url unembedded")
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("Unable to unembed url")
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
+
 pub async fn add_image_url(session: Session, add_url: web::Json<AddUrl>, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -318,3 +350,4 @@ pub async fn add_image_url(session: Session, add_url: web::Json<AddUrl>, pool: w
         }
     }
 }
+
