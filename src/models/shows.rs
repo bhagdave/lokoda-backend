@@ -14,8 +14,10 @@ pub struct Show {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ShowDates {
+    id: i32,
     user_id: Option<String>,
     showdate: Option<String>,
+    status: Option<String>,
     venue: String,
     city: String,
     day: i32,
@@ -51,7 +53,7 @@ pub async fn add_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data
 pub async fn get_user_shows(userid: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<ShowDates>,sqlx::Error> {
     sqlx::query_as!(ShowDates,
         r#"
-        SELECT user_id, date_format(showdate, "%d %m %y") as showdate, venue, city, day, month, year
+        SELECT id, user_id, date_format(showdate, "%d %m %y") as showdate, venue, city, day, month, year, status
         FROM showdates
         WHERE
             showdate > now()
@@ -61,4 +63,25 @@ pub async fn get_user_shows(userid: &str, pool: &web::Data<MySqlPool>) -> Result
         userid
     ).fetch_all(pool.get_ref())
     .await
+}
+
+pub async fn cancel_show(show_id: &str, user_id : &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    let update = sqlx::query!(
+        r#"
+        UPDATE user_shows SET status = 'CANCELLED'
+        WHERE id = ? AND user_id = ?
+        "#,
+        show_id,
+        user_id
+    ).execute(pool.get_ref())
+    .await;
+    match update {
+        Ok(record) => {
+            Ok(record)
+        }
+        Err(e) => {
+            log::error!("Failed to execute query: {:?}", e);
+            Err(e)
+        }
+    }
 }
