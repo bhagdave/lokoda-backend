@@ -251,3 +251,14 @@ pub async fn add_image_url_to_user(user: &str, url: &web::Json<AddUrl>, pool: &w
     ).execute(pool.get_ref())
     .await
 }
+
+pub async fn delete_image_url_from_user(user: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    sqlx::query!(
+        r#"
+        UPDATE users SET image_url = NULL
+        WHERE users.id = ?
+        "#,
+        user
+    ).execute(pool.get_ref())
+    .await
+}
