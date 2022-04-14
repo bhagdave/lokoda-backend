@@ -164,9 +164,9 @@ pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> Ht
     }
 }
 
-pub async fn get_genres_for_profile(profile: web::Json<Profile>, pool: web::Data<MySqlPool>) -> HttpResponse{
+pub async fn get_genres_for_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
     // Need to know the user id.
-    match get_user_genre_list(&profile.id, &pool).await
+    match get_user_genre_list(&user_id, &pool).await
     {
         Ok(records) => {
             HttpResponse::Ok().json(records)
@@ -177,9 +177,9 @@ pub async fn get_genres_for_profile(profile: web::Json<Profile>, pool: web::Data
     }
 }
 
-pub async fn get_shows_for_profile(profile: web::Json<Profile>, pool: web::Data<MySqlPool>) -> HttpResponse{
+pub async fn get_shows_for_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
     // Need to know the user id.
-    match crate::models::shows::get_user_shows(&profile.id, &pool).await
+    match crate::models::shows::get_user_shows(&user_id, &pool).await
     {
         Ok(records) => {
             HttpResponse::Ok().json(records)
