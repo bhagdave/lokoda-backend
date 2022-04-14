@@ -61,6 +61,16 @@ Returns Various:
 "not logged in" - No valid session
 "Genre Added" - Genre added
 
+Delete Genre
+URL:/delete_genre
+Parameters:user_id, genre_id
+Type:JSON ARRAY
+Cookie:Valid session cookie required
+
+Returns Various:
+"not logged in" - No valid session
+"Genre removed" - Genre added
+
 Get genres for profile
 URL:/get_genres_for_profile
 Parameters:id (of the profile you want to see)
