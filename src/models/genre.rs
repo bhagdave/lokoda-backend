@@ -6,8 +6,8 @@ use sqlx::mysql::MySqlQueryResult;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Genre {
-    genre_id: i32,
     genre: String,
+    genre_id: i32,
 }
 
 
