@@ -6,7 +6,7 @@ use sqlx::mysql::MySqlQueryResult;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Genre {
-    id: i32,
+    genre_id: i32,
     genre: String,
 }
 
@@ -26,7 +26,7 @@ pub struct UserGenreList {
 pub async fn get_genre_list(pool: &web::Data<MySqlPool>) -> Result<Vec<Genre>, sqlx::Error> {
     sqlx::query_as!(Genre,
         r#"
-            SELECT id, genre
+            SELECT id as genre_id, genre
             FROM genres
         "#
     )
