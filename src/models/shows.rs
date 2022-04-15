@@ -16,7 +16,6 @@ pub struct Show {
 pub struct ShowDates {
     id: i32,
     user_id: Option<String>,
-    showdate: Option<String>,
     status: Option<String>,
     venue: String,
     city: String,
@@ -53,7 +52,7 @@ pub async fn add_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data
 pub async fn get_user_shows(userid: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<ShowDates>,sqlx::Error> {
     sqlx::query_as!(ShowDates,
         r#"
-        SELECT id, user_id, date_format(showdate, "%d %m %y") as showdate, venue, city, day, month, year, status
+        SELECT id, user_id, venue, city, day, month, year, status
         FROM showdates
         WHERE
             showdate > now()
