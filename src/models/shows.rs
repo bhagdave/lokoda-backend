@@ -9,7 +9,9 @@ pub struct Show {
     venue: String,
     day: i32,
     month: i32,
-    year: i32
+    year: i32,
+    time: String,
+    comments: String
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -21,21 +23,25 @@ pub struct ShowDates {
     city: String,
     day: i32,
     month: i32,
-    year: i32
+    year: i32,
+    time: Option<String>,
+    comments: Option<String>
 }
 
 pub async fn add_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     let insert = sqlx::query!(
         r#"
-        INSERT INTO user_shows (day,month,year,city,venue,user_id)
-        VALUES(?, ?, ?, ?, ?, ?)
+        INSERT INTO user_shows (day,month,year,city,venue,user_id, time, comments)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         show.day,
         show.month,
         show.year,
         show.city,
         show.venue,
-        userid
+        userid,
+        show.time,
+        show.comments
     ).execute(pool.get_ref())
     .await;
     match insert {
@@ -52,7 +58,7 @@ pub async fn add_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data
 pub async fn get_user_shows(userid: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<ShowDates>,sqlx::Error> {
     sqlx::query_as!(ShowDates,
         r#"
-        SELECT id, user_id, venue, city, day, month, year, status
+        SELECT id, user_id, venue, city, day, month, year, status, time, comments
         FROM showdates
         WHERE
             showdate > now()
