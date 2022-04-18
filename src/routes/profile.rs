@@ -38,7 +38,6 @@ pub async fn profile_index(session: Session, pool: web::Data<MySqlPool>) -> Http
         }
     }
 }
-
 pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
     match get_profile_data(&user_id, &pool).await {
         Ok(profile) => {
@@ -50,7 +49,6 @@ pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>)
         }
     }
 }
-
 pub async fn profile_update() -> HttpResponse{
     HttpResponse::Ok().finish()
 }
@@ -66,7 +64,6 @@ pub async fn get_genres(pool: web::Data<MySqlPool>)-> HttpResponse{
         }
     }
 }
-
 pub async fn add_genre(session: Session, form: web::Json<UserGenre>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -98,7 +95,6 @@ pub async fn add_genre(session: Session, form: web::Json<UserGenre>, pool: web::
         }
     }
 }
-
 pub async fn delete_genre(session: Session, form: web::Json<UserGenre>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -130,7 +126,6 @@ pub async fn delete_genre(session: Session, form: web::Json<UserGenre>, pool: we
         }
     }
 }
-
 pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -163,7 +158,6 @@ pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> Ht
         }
     }
 }
-
 pub async fn get_genres_for_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
     // Need to know the user id.
     match get_user_genre_list(&user_id, &pool).await
@@ -189,7 +183,6 @@ pub async fn get_shows_for_profile(user_id: web::Path<String>, pool: web::Data<M
         }
     }
 }
-
 pub async fn add_show(session: Session, add_show: web::Json<Show>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -254,6 +247,37 @@ pub async fn cancel_user_show(session: Session, show_id: web::Path<String>, pool
     }
 }
 
+pub async fn update_show(session: Session, update_show: web::Json<Show>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid 
+            {
+                Ok(user) => {
+                    match update_user_show(&user, update_show, &pool).await
+                    {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Show updated")
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("Unable to updated show")
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
 
 pub async fn add_embed_url(session: Session, add_url: web::Json<AddUrl>, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
@@ -286,7 +310,6 @@ pub async fn add_embed_url(session: Session, add_url: web::Json<AddUrl>, pool: w
         }
     }
 }
-
 pub async fn delete_embed_url(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -350,7 +373,6 @@ pub async fn add_image_url(session: Session, add_url: web::Json<AddUrl>, pool: w
         }
     }
 }
-
 pub async fn delete_image_url(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {

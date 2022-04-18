@@ -5,13 +5,14 @@ use sqlx::mysql::MySqlQueryResult;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Show {
+    id: Option<i32>,
     city: String,
     venue: String,
     day: i32,
     month: i32,
     year: i32,
-    time: String,
-    comments: String
+    time: Option<String>,
+    comments: Option<String>
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -45,6 +46,34 @@ pub async fn add_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data
     ).execute(pool.get_ref())
     .await;
     match insert {
+        Ok(record) => {
+            Ok(record)
+        }
+        Err(e) => {
+            log::error!("Failed to execute query: {:?}", e);
+            Err(e)
+        }
+    }
+}
+
+pub async fn update_user_show(userid: &str, show: web::Json<Show>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+    let update = sqlx::query!(
+        r#"
+        UPDATE user_shows set day=?,month=?,year=?,city=?,venue=?,user_id=?, time=?, comments=?
+        WHERE id = ?
+        "#,
+        show.day,
+        show.month,
+        show.year,
+        show.city,
+        show.venue,
+        userid,
+        show.time,
+        show.comments,
+        show.id
+    ).execute(pool.get_ref())
+    .await;
+    match update {
         Ok(record) => {
             Ok(record)
         }
