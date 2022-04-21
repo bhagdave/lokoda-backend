@@ -38,6 +38,7 @@ pub async fn profile_index(session: Session, pool: web::Data<MySqlPool>) -> Http
         }
     }
 }
+
 pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
     match get_profile_data(&user_id, &pool).await {
         Ok(profile) => {
@@ -49,8 +50,37 @@ pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>)
         }
     }
 }
-pub async fn profile_update() -> HttpResponse{
-    HttpResponse::Ok().finish()
+
+pub async fn profile_update(session: Session, profile: web::Json<ProfileData>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    let update = update_profile(&user, &profile, &pool).await; 
+                    match update {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Profile Updated")
+                        }
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
 }
 
 pub async fn get_genres(pool: web::Data<MySqlPool>)-> HttpResponse{

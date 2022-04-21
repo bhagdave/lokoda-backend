@@ -262,3 +262,19 @@ pub async fn delete_image_url_from_user(user: &str, pool: &web::Data<MySqlPool>)
     ).execute(pool.get_ref())
     .await
 }
+
+pub async fn update_profile(user: &str, profile: &web::Json<ProfileData>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    sqlx::query!(
+        r#"
+        UPDATE users SET name = ?, email = ?, location = ?, embed_url = ?, image_url = ?
+        WHERE users.id = ?
+        "#,
+        profile.name,
+        profile.email,
+        profile.location,
+        profile.embed_url,
+        profile.image_url,
+        user
+    ).execute(pool.get_ref())
+    .await
+}
