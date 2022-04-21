@@ -133,3 +133,16 @@ URL:/unembed_url
 Parameters:NONE 
 
 On success returns "Url unembedded"
+
+Update profile
+URL:/profile_update
+Parameters:
+    name: String,
+    email: String,
+    location: String,
+    embed_url: String,
+    image_url: String
+Type:JSON ARRAY
+Returns:
+    success:Profile updates
+    fails:not logged in, no session, error
