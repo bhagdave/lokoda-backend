@@ -51,7 +51,7 @@ pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>)
     }
 }
 
-pub async fn profile_update(session: Session, profile: web::Json<ProfileData>, pool: web::Data<MySqlPool>) -> HttpResponse{
+pub async fn profile_update(session: Session, profile: web::Json<UpdateProfileData>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
         Ok(Some(token)) => {

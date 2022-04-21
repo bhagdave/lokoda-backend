@@ -66,6 +66,15 @@ pub struct ProfileData {
     image_url: Option<String>
 }
 
+#[derive(serde::Deserialize, Serialize)]
+pub struct UpdateProfileData {
+    name: Option<String>,
+    email: Option<String>,
+    location: Option<String>,
+    embed_url: Option<String>,
+    image_url: Option<String>
+}
+
 pub async fn get_profile_data(user: &str, pool: &web::Data<MySqlPool>) -> Result<ProfileData, sqlx::Error> {
     // get user profile from database table
     let profile_record = sqlx::query_as!(ProfileData,
@@ -263,7 +272,7 @@ pub async fn delete_image_url_from_user(user: &str, pool: &web::Data<MySqlPool>)
     .await
 }
 
-pub async fn update_profile(user: &str, profile: &web::Json<ProfileData>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+pub async fn update_profile(user: &str, profile: &web::Json<UpdateProfileData>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
     sqlx::query!(
         r#"
         UPDATE users SET name = ?, email = ?, location = ?, embed_url = ?, image_url = ?
