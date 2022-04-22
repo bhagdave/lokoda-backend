@@ -141,6 +141,7 @@ Parameters:
     email: String,
     location: String,
     embed_url: String,
+    avatar_url: String,
     image_url: String
 Type:JSON ARRAY
 Returns:

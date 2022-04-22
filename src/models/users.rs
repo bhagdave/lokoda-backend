@@ -63,6 +63,7 @@ pub struct ProfileData {
     account_type: String,
     location: String,
     embed_url: Option<String>,
+    avatar_url: Option<String>,
     image_url: Option<String>
 }
 
@@ -72,6 +73,7 @@ pub struct UpdateProfileData {
     email: Option<String>,
     location: Option<String>,
     embed_url: Option<String>,
+    avatar_url: Option<String>,
     image_url: Option<String>
 }
 
@@ -79,7 +81,7 @@ pub async fn get_profile_data(user: &str, pool: &web::Data<MySqlPool>) -> Result
     // get user profile from database table
     let profile_record = sqlx::query_as!(ProfileData,
         r#"
-            SELECT id, name, email, account_type, location, embed_url, image_url
+            SELECT id, name, email, account_type, location, embed_url, image_url, avatar_url
             FROM users
             WHERE id = ?
             LIMIT 1
@@ -297,7 +299,7 @@ pub async fn delete_image_url_from_user(user: &str, pool: &web::Data<MySqlPool>)
 pub async fn update_profile(user: &str, profile: &web::Json<UpdateProfileData>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
     sqlx::query!(
         r#"
-        UPDATE users SET name = ?, email = ?, location = ?, embed_url = ?, image_url = ?
+        UPDATE users SET name = ?, email = ?, location = ?, embed_url = ?, image_url = ?, avatar_url = ?
         WHERE users.id = ?
         "#,
         profile.name,
@@ -305,6 +307,7 @@ pub async fn update_profile(user: &str, profile: &web::Json<UpdateProfileData>, 
         profile.location,
         profile.embed_url,
         profile.image_url,
+        profile.avatar_url,
         user
     ).execute(pool.get_ref())
     .await
