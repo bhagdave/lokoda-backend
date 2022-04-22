@@ -340,3 +340,28 @@ pub async fn change_password_for_user(user: &str, password: &web::Json<PasswordU
     ).execute(pool.get_ref())
     .await
 }
+
+pub async fn delete_user_account(user: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    sqlx::query!(
+        r#"
+        DELETE FROM user_shows WHERE user_id = ?
+        "#,
+        user
+    ).execute(pool.get_ref())
+    .await?;
+    sqlx::query!(
+        r#"
+        DELETE FROM user_genres WHERE user_id = ?
+        "#,
+        user
+    ).execute(pool.get_ref())
+    .await?;
+    sqlx::query!(
+        r#"
+        DELETE FROM users WHERE users.id = ?
+        "#,
+        user
+    ).execute(pool.get_ref())
+    .await
+}
+

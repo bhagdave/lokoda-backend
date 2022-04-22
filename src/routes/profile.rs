@@ -529,3 +529,35 @@ pub async fn update_user_password(session: Session, new_password: web::Json<Pass
     }
 }
 
+
+pub async fn delete_account(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid 
+            {
+                Ok(user) => {
+                    match delete_user_account(&user, &pool).await
+                    {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Account Deleted")
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("Unable to delete account")
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}

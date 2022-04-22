@@ -167,3 +167,9 @@ Parameters: password
 Type: JSON array
 Returns:
 Password updated 
+
+Delete account
+URL:/delete_account
+Parameters:none
+Returns:
+Account deleted
