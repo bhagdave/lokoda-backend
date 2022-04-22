@@ -249,6 +249,28 @@ pub async fn delete_embed_url_from_user(user: &str, pool: &web::Data<MySqlPool>)
     .await
 }
 
+pub async fn add_avatar_url_to_user(user: &str, url: &web::Json<AddUrl>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        UPDATE users SET avatar_url = ? 
+        WHERE users.id = ?
+        "#,
+        url.url,
+        user
+    ).execute(pool.get_ref())
+    .await
+}
+
+pub async fn delete_avatar_url_from_user(user: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        UPDATE users SET avatar_url = NULL 
+        WHERE users.id = ?
+        "#,
+        user
+    ).execute(pool.get_ref())
+    .await
+}
 pub async fn add_image_url_to_user(user: &str, url: &web::Json<AddUrl>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"

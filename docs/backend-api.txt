@@ -146,3 +146,16 @@ Type:JSON ARRAY
 Returns:
     success:Profile updates
     fails:not logged in, no session, error
+
+Add Avatar
+URL:add_avatar
+Parameters: url
+Type: JSON Array
+Returns:
+Url avatarded
+
+Delete Avatar
+URL:delete_avatar
+Parameters: NONE
+Returns:
+Url unavatarded
