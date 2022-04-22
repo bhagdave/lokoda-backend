@@ -497,3 +497,35 @@ pub async fn delete_avatar(session: Session, pool: web::Data<MySqlPool>) -> Http
     }
 }
 
+pub async fn update_user_password(session: Session, new_password: web::Json<PasswordUpdate>, pool: web::Data<MySqlPool>) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid 
+            {
+                Ok(user) => {
+                    match change_password_for_user(&user, &new_password, &pool).await
+                    {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Password updated")
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("Unable to update password")
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
+

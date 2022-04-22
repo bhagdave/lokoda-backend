@@ -3,6 +3,7 @@ use sqlx::MySqlPool;
 use sqlx::mysql::MySqlQueryResult;
 use guid_create::GUID;
 use serde::{Serialize};
+use bcrypt::*;
 
 
 #[derive(serde::Deserialize)]
@@ -23,6 +24,11 @@ pub struct SimpleUser {
 #[derive(serde::Deserialize)]
 pub struct ResetPassword {
     pub email: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct PasswordUpdate {
+    pub password: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -308,6 +314,28 @@ pub async fn update_profile(user: &str, profile: &web::Json<UpdateProfileData>, 
         profile.embed_url,
         profile.image_url,
         profile.avatar_url,
+        user
+    ).execute(pool.get_ref())
+    .await
+}
+
+pub async fn change_password_for_user(user: &str, password: &web::Json<PasswordUpdate>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    let password_hash = match hash(&password.password,bcrypt::DEFAULT_COST)
+    {
+        Ok(hashed_password)=> {
+            hashed_password
+        }
+        Err(_e) => {
+            log::error!("Failed to encrypt password");
+            "".to_string()
+        }
+    };
+    sqlx::query!(
+        r#"
+        UPDATE users SET password = ?
+        WHERE users.id = ?
+        "#,
+        password_hash,
         user
     ).execute(pool.get_ref())
     .await

@@ -160,3 +160,10 @@ URL:delete_avatar
 Parameters: NONE
 Returns:
 Url unavatarded
+
+Update user Password
+URL:update_user_password
+Parameters: password
+Type: JSON array
+Returns:
+Password updated 
