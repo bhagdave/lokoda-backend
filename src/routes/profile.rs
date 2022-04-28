@@ -4,6 +4,7 @@ use actix_session::{Session};
 use crate::models::users::*;
 use crate::models::genre::*;
 use crate::models::shows::*;
+use bcrypt::*;
 
 pub async fn profile_index(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
@@ -501,17 +502,36 @@ pub async fn update_user_password(session: Session, new_password: web::Json<Pass
     let logged_in = session.get::<String>("tk");
     match logged_in {
         Ok(Some(token)) => {
+
             let userid = check_session_token(&token, &pool).await;
             match userid 
             {
                 Ok(user) => {
-                    match change_password_for_user(&user, &new_password, &pool).await
+                    let password_hash = match hash(&new_password.old_password,bcrypt::DEFAULT_COST)
+                    {
+                        Ok(hashed_password)=> {
+                            hashed_password
+                        }
+                        Err(_e) => {
+                            log::error!("Failed to encrypt password");
+                            "".to_string()
+                        }
+                    };
+                    match check_password_for_user(&user, &password_hash, &pool).await
                     {
                         Ok(_) => {
-                            HttpResponse::Ok().json("Password updated")
+                            match change_password_for_user(&user, &new_password, &pool).await
+                            {
+                                Ok(_) => {
+                                    HttpResponse::Ok().json("Password updated")
+                                }
+                                Err(_) => {
+                                    HttpResponse::Ok().json("Unable to update password")
+                                }
+                            }
                         }
                         Err(_) => {
-                            HttpResponse::Ok().json("Unable to update password")
+                            HttpResponse::Ok().json("Old Password does not match")
                         }
                     }
                 }

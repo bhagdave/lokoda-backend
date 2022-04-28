@@ -29,6 +29,7 @@ pub struct ResetPassword {
 #[derive(serde::Deserialize)]
 pub struct PasswordUpdate {
     pub password: String,
+    pub old_password: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -339,6 +340,21 @@ pub async fn change_password_for_user(user: &str, password: &web::Json<PasswordU
         user
     ).execute(pool.get_ref())
     .await
+}
+pub async fn check_password_for_user(user: &str, password: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error>{
+    let user = sqlx::query_as!(LoginData,
+        r#"
+        SELECT id, email, password 
+        FROM users 
+        WHERE password = ?
+        AND users.id = ?
+        LIMIT 1
+        "#,
+        password,
+        user
+    ).fetch_one(pool.get_ref())
+    .await;
+    user
 }
 
 pub async fn delete_user_account(user: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{

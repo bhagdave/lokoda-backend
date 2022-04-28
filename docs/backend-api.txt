@@ -163,7 +163,7 @@ Url unavatarded
 
 Update user Password
 URL:update_user_password
-Parameters: password
+Parameters: password, old_password
 Type: JSON array
 Returns:
 Password updated 
