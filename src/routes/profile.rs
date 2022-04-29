@@ -502,23 +502,19 @@ pub async fn update_user_password(session: Session, new_password: web::Json<Pass
     let logged_in = session.get::<String>("tk");
     match logged_in {
         Ok(Some(token)) => {
-            log::info!("Have token in session");
             let userid = check_session_token(&token, &pool).await;
             match userid 
             {
                 Ok(user) => {
-                    log::info!("Token is good");
                     match get_user(&user, &pool).await
                     {
                         Ok(user_data) => {
                             match verify(&new_password.old_password, &user_data.password)
                             {
                                 Ok(_) => {
-                                    log::info!("Old password verified");
                                     match change_password_for_user(&user, &new_password, &pool).await
                                     {
                                         Ok(_) => {
-                                            log::info!("Password updated");
                                             HttpResponse::Ok().json("Password updated")
                                         }
                                         Err(_) => {
