@@ -2,9 +2,11 @@ use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
 use bcrypt::*;
 use crate::models::users::*;
+use actix_session::{Session};
+use actix_web::http::header::ContentType;
 
 
-pub async fn register(form: web::Json<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
+pub async fn register(session: Session, form: web::Json<UserData>, pool: web::Data<MySqlPool>,) -> HttpResponse{
     let password_hash = match hash(&form.password,bcrypt::DEFAULT_COST)
     {
         Ok(hashed_password)=> {
@@ -22,7 +24,18 @@ pub async fn register(form: web::Json<UserData>, pool: web::Data<MySqlPool>,) ->
             // get the user to send back
             match get_login_data(&form.email, &pool).await {
                 Ok(user_record) => {
-                    HttpResponse::Ok().json(user_record.id)
+                        let token = create_session_token(&user_record.id, &pool).await;
+                        match token 
+                        {
+                            Ok(token) => {
+                                let _result = session.insert("tk",&token);
+                                let response = format!("{{\"token\" : \"{}\", \"id\" : \"{}\"}}", token ,user_record.id);
+                                HttpResponse::Ok().insert_header(ContentType::json()).body(response)
+                            }
+                            Err(_) => {
+                                HttpResponse::Ok().body("Unable to create session token")
+                            }
+                        }
                 }
                 Err(_) => {
                     HttpResponse::Ok().json("User registered but unable to get from database.")
