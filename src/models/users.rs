@@ -341,16 +341,14 @@ pub async fn change_password_for_user(user: &str, password: &web::Json<PasswordU
     ).execute(pool.get_ref())
     .await
 }
-pub async fn check_password_for_user(user: &str, password: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error>{
+pub async fn get_user(user: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error>{
     let user = sqlx::query_as!(LoginData,
         r#"
         SELECT id, email, password 
         FROM users 
-        WHERE password = ?
-        AND users.id = ?
+        WHERE users.id = ?
         LIMIT 1
         "#,
-        password,
         user
     ).fetch_one(pool.get_ref())
     .await;

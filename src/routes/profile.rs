@@ -502,36 +502,37 @@ pub async fn update_user_password(session: Session, new_password: web::Json<Pass
     let logged_in = session.get::<String>("tk");
     match logged_in {
         Ok(Some(token)) => {
-
+            log::info!("Have token in session");
             let userid = check_session_token(&token, &pool).await;
             match userid 
             {
                 Ok(user) => {
-                    let password_hash = match hash(&new_password.old_password,bcrypt::DEFAULT_COST)
+                    log::info!("Token is good");
+                    match get_user(&user, &pool).await
                     {
-                        Ok(hashed_password)=> {
-                            hashed_password
-                        }
-                        Err(_e) => {
-                            log::error!("Failed to encrypt password");
-                            "".to_string()
-                        }
-                    };
-                    match check_password_for_user(&user, &password_hash, &pool).await
-                    {
-                        Ok(_) => {
-                            match change_password_for_user(&user, &new_password, &pool).await
+                        Ok(user_data) => {
+                            match verify(&new_password.old_password, &user_data.password)
                             {
                                 Ok(_) => {
-                                    HttpResponse::Ok().json("Password updated")
+                                    log::info!("Old password verified");
+                                    match change_password_for_user(&user, &new_password, &pool).await
+                                    {
+                                        Ok(_) => {
+                                            log::info!("Password updated");
+                                            HttpResponse::Ok().json("Password updated")
+                                        }
+                                        Err(_) => {
+                                            HttpResponse::Ok().json("Unable to update password")
+                                        }
+                                    }
                                 }
                                 Err(_) => {
-                                    HttpResponse::Ok().json("Unable to update password")
+                                    HttpResponse::Ok().json("Old Password does not match")
                                 }
                             }
                         }
                         Err(_) => {
-                            HttpResponse::Ok().json("Old Password does not match")
+                            HttpResponse::Ok().json("Unable to select user record from token")
                         }
                     }
                 }
