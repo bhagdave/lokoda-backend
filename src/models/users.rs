@@ -6,9 +6,9 @@ use serde::{Serialize};
 use bcrypt::*;
 
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Serialize)]
 pub struct UserData {
-    email: String,
+    pub email: String,
     name: String,
     pub password: String,
     account_type: String,
@@ -39,7 +39,7 @@ pub struct UpdatePassword {
     pub password: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Serialize)]
 pub struct LoginData {
     pub id: String,
     pub email: String,

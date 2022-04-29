@@ -1,6 +1,5 @@
 use sqlx::MySqlPool;
 use actix_web::{web, HttpResponse};
-use actix_web::http::header::ContentType;
 use bcrypt::*;
 use crate::models::users::*;
 
@@ -20,7 +19,15 @@ pub async fn register(form: web::Json<UserData>, pool: web::Data<MySqlPool>,) ->
     match insert
     {
         Ok(_) => {
-            HttpResponse::Ok().insert_header(ContentType::json()).body("data")
+            // get the user to send back
+            match get_login_data(&form.email, &pool).await {
+                Ok(user_record) => {
+                    HttpResponse::Ok().json(user_record.id)
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("User registered but unable to get from database.")
+                }
+            }
         }
         Err(e) => {
             log::error!("Failed to execute query: {:?}", e);
