@@ -1,2 +1,2 @@
 #curl -vv --cookie "actix-session=UaqV6FZAX3c19OH8ywBVt1yTrtY03I1hKGzUPFyreYg%3D%7B%22tk%22%3A%22%5C%22D4D915DA-9FA8-8956-50B6-11555FFCFE12%5C%22%22%7D;" http://lokoda.co.uk/api/search -H "Content-Type: application/json"  --data '{"genre":"", "name":"", "account_type":"Artist","location":"Birmingham"}'
-curl -vv --cookie "actix-session=YFvl4RfysHHLPtJUwlk%2FI9y4ebLA8OID39QbEnSX5JI%3D%7B%22tk%22%3A%22%5C%220AE7432B-3CB5-24F4-79F3-66819AC56201%5C%22%22%7D;" http://127.0.0.1:8888/search -H "Content-Type: application/json"  --data '{"genre":"Alternative", "name":"daves", "account_type":"Artist","location":"Birmingham"}'
+curl -vv http://127.0.0.1:8888/search -H "Content-Type: application/json"  --data '{"genre":"Folk", "name":"daves"}'
