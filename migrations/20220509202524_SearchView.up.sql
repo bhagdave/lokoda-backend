@@ -13,7 +13,7 @@ FROM
         LEFT JOIN
     (SELECT
         user_id,
-            GROUP_CONCAT(genre
+            GROUP_CONCAT(json_array("id:", genre_id, "genre:", genre)
                 ORDER BY genre ASC
                 SEPARATOR ', ') AS genres
     FROM
