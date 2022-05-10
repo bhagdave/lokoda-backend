@@ -12,6 +12,7 @@ pub struct Search {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Results {
+    id: String,
     account_type: String,
     image_url: Option<String>,
     avatar_url: Option<String>,
@@ -23,7 +24,7 @@ pub struct Results {
 pub async fn do_search(form: &web::Json<Search>, pool: &web::Data<MySqlPool>) -> Result<Vec<Results>, sqlx::Error>{
     sqlx::query_as!(Results,
         r#"
-            SELECT account_type,image_url,avatar_url,name, location, genres
+            SELECT id,account_type,image_url,avatar_url,name, location, genres
             FROM vw_discover
             WHERE (? = account_type)
             OR (? like location)
