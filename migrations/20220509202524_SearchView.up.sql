@@ -7,13 +7,13 @@ SELECT
     location,
     avatar_url,
     image_url,
-    genres
+    JSON_ARRAY(x.genres) as genres
 FROM
     users
         LEFT JOIN
     (SELECT
         user_id,
-            GROUP_CONCAT(json_array("id:", genre_id, "genre:", genre)
+            GROUP_CONCAT(json_object("id:", genre_id, "genre:", genre)
                 ORDER BY genre ASC
                 SEPARATOR ', ') AS genres
     FROM
