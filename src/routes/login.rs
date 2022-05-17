@@ -31,19 +31,16 @@ pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data
                             }
                         }
                     } else {
-                        log::error!("Failed to login");
-                        HttpResponse::InternalServerError().finish()
+                        HttpResponse::Ok().json("Unable to locate user with those credentials.")
                     }
                 }
                 Err(e) => {
-                    log::error!("Failed to login {:?}", e);
-                    HttpResponse::InternalServerError().finish()
+                    HttpResponse::Ok().json("Unable to locate user with those credentials.")
                 }
             }
         }
         Err(e) => {
-            log::error!("Unable to find user {:?}", e);
-            HttpResponse::InternalServerError().finish()
+            HttpResponse::Ok().json("Unable to locate user with those credentials.")
         }
     }
 
