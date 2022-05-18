@@ -28,6 +28,7 @@ pub async fn get_genre_list(pool: &web::Data<MySqlPool>) -> Result<Vec<Genre>, s
         r#"
             SELECT id as genre_id, genre
             FROM genres
+            ORDER BY genre
         "#
     )
     .fetch_all(pool.get_ref())
@@ -83,6 +84,7 @@ pub async fn get_user_genre_list(userid: &str, pool: &web::Data<MySqlPool>) -> R
             FROM genres, user_genres
             WHERE user_id = ?
             AND genres.id = user_genres.genre_id
+            ORDER BY genre
         "#,
         userid,
     ).fetch_all(pool.get_ref())
