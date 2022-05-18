@@ -1,23 +1,21 @@
 -- Add up migration script here
 CREATE OR REPLACE VIEW vw_discover AS
-SELECT
-    users.id,
-    name,
-    account_type,
-    location,
-    avatar_url,
-    image_url,
-    JSON_ARRAY(x.genres) as genres
-FROM
-    users
-        LEFT JOIN
-    (SELECT
-        user_id,
-            GROUP_CONCAT(json_object("id:", genre_id, "genre:", genre)
-                ORDER BY genre ASC
-                SEPARATOR ', ') AS genres
+SELECT 
+        `lokoda`.`users`.`id` AS `id`,
+        `lokoda`.`users`.`name` AS `name`,
+        `lokoda`.`users`.`account_type` AS `account_type`,
+        `lokoda`.`users`.`location` AS `location`,
+        `lokoda`.`users`.`avatar_url` AS `avatar_url`,
+        `lokoda`.`users`.`image_url` AS `image_url`,
+        concat('[',`x`.`genres` , ']') AS `genres`
     FROM
-        user_genres
-    JOIN genres ON genres.id = user_genres.genre_id
-    GROUP BY user_id
-    ) AS x ON x.user_id = users.id
+        (`lokoda`.`users`
+        LEFT JOIN (SELECT 
+            `lokoda`.`user_genres`.`user_id` AS `user_id`,
+                GROUP_CONCAT('{"id":"', `lokoda`.`user_genres`.`genre_id`, '","', 'genre":"', `lokoda`.`genres`.`genre`, '"}'
+                    ORDER BY `lokoda`.`genres`.`genre` ASC
+                    SEPARATOR ', ') AS `genres`
+        FROM
+            (`lokoda`.`user_genres`
+        JOIN `lokoda`.`genres` ON ((`lokoda`.`genres`.`id` = `lokoda`.`user_genres`.`genre_id`)))
+        GROUP BY `lokoda`.`user_genres`.`user_id`) `x` ON ((`x`.`user_id` = `lokoda`.`users`.`id`)));
