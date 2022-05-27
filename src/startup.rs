@@ -49,6 +49,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
                 web::resource("/update_password")
                 .route(web::post().to(update_password))
             )
+            .route("/get_contacts", web::get().to(get_contacts))
             .app_data(db_pool.clone())
     })
     .listen(listener)?
