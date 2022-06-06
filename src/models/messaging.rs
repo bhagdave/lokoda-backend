@@ -3,6 +3,7 @@ use serde::{Serialize, Deserialize};
 use sqlx::MySqlPool;
 use sqlx::mysql::MySqlQueryResult;
 use sqlx::types::chrono::NaiveDateTime;
+use crate::models::users::*;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Contact {
@@ -17,6 +18,7 @@ pub struct Group {
     id: String,
     name: String,
     messages: Option<Vec<Message>>,
+    users: Option<Vec<ProfileData>>,
 }
 
 pub struct Message {
@@ -86,7 +88,7 @@ impl Group {
         let group = sqlx::query!("SELECT name FROM `groups` WHERE id = ?", group_id)
             .fetch_one(pool.get_ref())
             .await;
-        Self {id : group_id.to_string(), name: group.unwrap().name, messages:None}
+        Self {id : group_id.to_string(), name: group.unwrap().name, messages:None, users:None}
     }
 
     pub async fn add_new_message(self, user_id: &str, message: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
@@ -119,6 +121,25 @@ impl Group {
             }
             Err(_) => {
                 self.messages = None
+            }
+        }
+    }
+
+    pub async fn get_users(mut self, pool: &web::Data<MySqlPool>){
+        match sqlx::query_as!(ProfileData,
+            r#"
+                SELECT users.id, users.name, users.email, users.account_type, users.location, users.embed_url, users.image_url, users.avatar_url
+                FROM users
+                JOIN user_groups ON user_groups.user_id = users.id AND group_id = ?
+            "#,
+            self.id,
+        ).fetch_all(pool.get_ref())
+        .await {
+            Ok(users) => {
+                    self.users = Some(users);
+            }
+            Err(_) => {
+                self.users = None
             }
         }
     }

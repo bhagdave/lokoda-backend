@@ -64,14 +64,14 @@ pub struct Profile {
 
 #[derive(serde::Deserialize, Serialize)]
 pub struct ProfileData {
-    id: String,
-    name: String,
-    email: String,
-    account_type: String,
-    location: String,
-    embed_url: Option<String>,
-    avatar_url: Option<String>,
-    image_url: Option<String>
+    pub id: String,
+    pub name: String,
+    pub email: String,
+    pub account_type: String,
+    pub location: String,
+    pub embed_url: Option<String>,
+    pub avatar_url: Option<String>,
+    pub image_url: Option<String>
 }
 
 #[derive(serde::Deserialize, Serialize)]
