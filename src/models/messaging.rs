@@ -1,6 +1,7 @@
 use actix_web::web;
 use serde::{Serialize, Deserialize};
 use sqlx::MySqlPool;
+use sqlx::Row;
 use sqlx::mysql::{MySqlQueryResult, MySqlRow};
 use sqlx::types::chrono::NaiveDateTime;
 use crate::models::users::*;
@@ -33,7 +34,7 @@ pub struct Message {
 
 
 pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Group>, sqlx::Error>{
-    let rows = sqlx::query(
+    let rows = sqlx::query!(
         r#"
             SELECT 
                 groups.id, 
@@ -41,18 +42,23 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
             FROM 
                 `groups` 
             JOIN user_groups ON group_id = groups.id AND user_id = ?
-        "#
+        "#,
+        user
     )
-    .bind(user)
     .fetch_all(pool.get_ref())
     .await;
     match rows {
         Ok(groups) => {
-            for (pos, e)  in groups.iter().enumerate() {
+            //for (pos, e)  in groups.iter().enumerate() {
                 //let id: String = e.id;
-                println!("Element at position {}: {:?}", pos, e);
-            }
-            Ok( vec!(Group { id: "1".to_string(), name : "Sir Francis Bacon".to_string(), messages: None, users: None}))
+            //    log::info!("Element at position {}: {:?}", pos, e);
+            //    log::info!("Group Name is {}" , e.name);
+            //}
+            let response:Vec<Group> = groups.iter().map(|group| {
+                Group { id: group.id.to_string(), name: group.name.to_string(), messages: None, users: None }
+            }).collect();
+            //Ok( vec!(Group { id: "1".to_string(), name : "Sir Francis Bacon".to_string(), messages: None, users: None}))
+            Ok(response)
         }
         Err(e) => {
             Err(e)
