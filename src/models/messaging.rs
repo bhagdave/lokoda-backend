@@ -1,7 +1,7 @@
 use actix_web::web;
 use serde::{Serialize, Deserialize};
 use sqlx::MySqlPool;
-use sqlx::mysql::MySqlQueryResult;
+use sqlx::mysql::{MySqlQueryResult, MySqlRow};
 use sqlx::types::chrono::NaiveDateTime;
 use crate::models::users::*;
 
@@ -14,6 +14,7 @@ pub struct Contact {
     blocked: Option<i8>
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Group {
     id: String,
     name: String,
@@ -21,6 +22,7 @@ pub struct Group {
     users: Option<Vec<ProfileData>>,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Message {
     id : String,
     user_id : String,
@@ -28,6 +30,35 @@ pub struct Message {
     created_at: NaiveDateTime,
 }
 
+
+
+pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Group>, sqlx::Error>{
+    let rows = sqlx::query(
+        r#"
+            SELECT 
+                groups.id, 
+                groups.name
+            FROM 
+                `groups` 
+            JOIN user_groups ON group_id = groups.id AND user_id = ?
+        "#
+    )
+    .bind(user)
+    .fetch_all(pool.get_ref())
+    .await;
+    match rows {
+        Ok(groups) => {
+            for (pos, e)  in groups.iter().enumerate() {
+                //let id: String = e.id;
+                println!("Element at position {}: {:?}", pos, e);
+            }
+            Ok( vec!(Group { id: "1".to_string(), name : "Sir Francis Bacon".to_string(), messages: None, users: None}))
+        }
+        Err(e) => {
+            Err(e)
+        }
+    }
+}
 
 pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Contact>, sqlx::Error>{
     sqlx::query_as!(Contact,
