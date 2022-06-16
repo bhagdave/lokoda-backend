@@ -61,7 +61,15 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
     .map(|row| (Group { id: row.id, name: row.name, messages: None, users: None }))
     .fetch_all(pool.get_ref())
     .await?;
-    rows.iter_mut().map(|row| row.fetch_messages(&pool))
+    rows.iter_mut().map(|row| 
+        row.fetch_messages(&pool)
+    )
+    .collect::<FuturesUnordered<_>>()
+    .collect::<Vec<_>>()
+    .await;
+    rows.iter_mut().map(|row| 
+        row.get_users(&pool)
+    )
     .collect::<FuturesUnordered<_>>()
     .collect::<Vec<_>>()
     .await;
