@@ -2,11 +2,11 @@ use actix_web::web;
 use serde::{Serialize, Deserialize};
 use sqlx::MySqlPool;
 use sqlx::Row;
-use sqlx::mysql::{MySqlQueryResult, MySqlRow};
+use sqlx::mysql::{MySqlQueryResult};
 use sqlx::types::chrono::NaiveDateTime;
 use crate::models::users::*;
-use std::any::type_name;
-use futures::stream;
+
+
 use futures::stream::StreamExt;
 use futures::stream::futures_unordered::FuturesUnordered;
 

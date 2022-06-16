@@ -34,12 +34,12 @@ pub async fn login(session: Session, form: web::Json<LoginForm>, pool: web::Data
                         HttpResponse::Ok().json("Unable to locate user with those credentials.")
                     }
                 }
-                Err(e) => {
+                Err(_e) => {
                     HttpResponse::Ok().json("Unable to locate user with those credentials.")
                 }
             }
         }
-        Err(e) => {
+        Err(_e) => {
             HttpResponse::Ok().json("Unable to locate user with those credentials.")
         }
     }
