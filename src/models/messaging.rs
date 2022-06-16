@@ -5,6 +5,10 @@ use sqlx::Row;
 use sqlx::mysql::{MySqlQueryResult, MySqlRow};
 use sqlx::types::chrono::NaiveDateTime;
 use crate::models::users::*;
+use std::any::type_name;
+use futures::stream;
+use futures::stream::StreamExt;
+use futures::stream::futures_unordered::FuturesUnordered;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Contact {
@@ -38,10 +42,12 @@ pub struct Message {
     created_at: NaiveDateTime,
 }
 
-
+fn print_type_of<T>(_: &T) {
+    println!("{}", std::any::type_name::<T>())
+}
 
 pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Group>, sqlx::Error>{
-    sqlx::query!(
+    let mut rows = sqlx::query!(
         r#"
             SELECT 
                 groups.id, 
@@ -54,7 +60,12 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
     )
     .map(|row| (Group { id: row.id, name: row.name, messages: None, users: None }))
     .fetch_all(pool.get_ref())
-    .await
+    .await?;
+    rows.iter_mut().map(|row| row.fetch_messages(&pool))
+    .collect::<FuturesUnordered<_>>()
+    .collect::<Vec<_>>()
+    .await;
+    Ok(rows)
 }
 
 pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Contact>, sqlx::Error>{
@@ -143,12 +154,13 @@ impl Group {
             "#,
             self.id,
         ).fetch_all(pool.get_ref())
-        .await {
+        .await
+        {
             Ok(messages) => {
-                    self.messages = Some(messages);
+                self.messages = Some(messages);
             }
             Err(_) => {
-                self.messages = None
+                self.messages = None;
             }
         }
     }
