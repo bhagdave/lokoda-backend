@@ -23,6 +23,13 @@ pub struct Group {
     users: Option<Vec<ProfileData>>,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct Grouped {
+    id: String,
+    name: String,
+    last_message: Option<String>,
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Message {
     id : String,
@@ -34,7 +41,7 @@ pub struct Message {
 
 
 pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Group>, sqlx::Error>{
-    let rows = sqlx::query!(
+    sqlx::query!(
         r#"
             SELECT 
                 groups.id, 
@@ -45,25 +52,9 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
         "#,
         user
     )
+    .map(|row| (Group { id: row.id, name: row.name, messages: None, users: None }))
     .fetch_all(pool.get_ref())
-    .await;
-    match rows {
-        Ok(groups) => {
-            //for (pos, e)  in groups.iter().enumerate() {
-                //let id: String = e.id;
-            //    log::info!("Element at position {}: {:?}", pos, e);
-            //    log::info!("Group Name is {}" , e.name);
-            //}
-            let response:Vec<Group> = groups.iter().map(|group| {
-                Group { id: group.id.to_string(), name: group.name.to_string(), messages: None, users: None }
-            }).collect();
-            //Ok( vec!(Group { id: "1".to_string(), name : "Sir Francis Bacon".to_string(), messages: None, users: None}))
-            Ok(response)
-        }
-        Err(e) => {
-            Err(e)
-        }
-    }
+    .await
 }
 
 pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Contact>, sqlx::Error>{
@@ -141,7 +132,7 @@ impl Group {
         .await
     }
 
-    pub async fn fetch_messages(mut self, pool: &web::Data<MySqlPool>){
+    pub async fn fetch_messages(&mut self, pool: &web::Data<MySqlPool>){
         match sqlx::query_as!(Message,
             r#"
                 SELECT id,user_id,message,created_at
@@ -162,7 +153,7 @@ impl Group {
         }
     }
 
-    pub async fn get_users(mut self, pool: &web::Data<MySqlPool>){
+    pub async fn get_users(&mut self, pool: &web::Data<MySqlPool>){
         match sqlx::query_as!(ProfileData,
             r#"
                 SELECT users.id, users.name, users.email, users.account_type, users.location, users.embed_url, users.image_url, users.avatar_url
