@@ -46,6 +46,27 @@ fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
 
+pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Grouped>, sqlx::Error>{
+    sqlx::query_as!(Grouped,
+        r#"
+            SELECT 
+                id, name, message as last_message
+            FROM 
+                `groups` 
+                JOIN user_groups ON 
+                    user_groups.group_id =`groups`.id 
+                    AND user_id = ? 
+                LEFT JOIN 
+                    (SELECT group_id, message FROM messages LIMIT 1 ) x 
+                    ON x.group_id = user_groups.group_id
+        "#,
+        user
+    ).fetch_all(pool.get_ref())
+    .await
+}
+
+
+
 pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Group>, sqlx::Error>{
     let mut rows = sqlx::query!(
         r#"
@@ -75,6 +96,14 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
     .await;
     Ok(rows)
 }
+
+pub async fn get_group(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error>{
+    let mut group = Group::get_group(group_id, pool).await;
+    group.fetch_messages(pool).await;
+    group.get_users(&pool).await;
+    Ok(group)
+}
+
 
 pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Contact>, sqlx::Error>{
     sqlx::query_as!(Contact,
