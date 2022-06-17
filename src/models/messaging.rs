@@ -1,7 +1,6 @@
 use actix_web::web;
 use serde::{Serialize, Deserialize};
 use sqlx::MySqlPool;
-use sqlx::Row;
 use sqlx::mysql::{MySqlQueryResult};
 use sqlx::types::chrono::NaiveDateTime;
 use crate::models::users::*;
@@ -42,6 +41,12 @@ pub struct Message {
     created_at: NaiveDateTime,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct NewMessage {
+    group_id : String,
+    message: String,
+}
+
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
@@ -65,7 +70,10 @@ pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<G
     .await
 }
 
-
+pub async fn new_message(user: &str, new_message: &web::Json<NewMessage>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    let group = Group::get_group(&new_message.group_id, pool).await;
+    group.add_new_message(&user, &new_message.message, pool).await
+}
 
 pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Group>, sqlx::Error>{
     let mut rows = sqlx::query!(
@@ -159,12 +167,20 @@ pub async fn create_group(name: &str, pool: &web::Data<MySqlPool>) -> Result<MyS
     .await
 }
 
+
 impl Group { 
     pub async fn get_group(group_id : &str, pool: &web::Data<MySqlPool>) -> Self {
         let group = sqlx::query!("SELECT name FROM `groups` WHERE id = ?", group_id)
             .fetch_one(pool.get_ref())
             .await;
-        Self {id : group_id.to_string(), name: group.unwrap().name, messages:None, users:None}
+        match group {
+            Ok(group) => {
+                Self {id : group_id.to_string(), name: group.name, messages:None, users:None}
+            }
+            Err(_) => {
+                Self {id : group_id.to_string(), name: "NOTFOUND".to_string(), messages:None, users:None}
+            }
+        }
     }
 
     pub async fn add_new_message(self, user_id: &str, message: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{

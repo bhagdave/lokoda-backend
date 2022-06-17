@@ -7,8 +7,36 @@ use crate::models::users::*;
 pub async fn messages() -> HttpResponse{
     HttpResponse::Ok().finish()
 }
-pub async fn new_message() -> HttpResponse{
-    HttpResponse::Ok().finish()
+pub async fn new_message(session: Session, new_message: web::Json<NewMessage>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    let added = messaging::new_message(&user, &new_message, &pool).await; 
+                    match added {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Message added")
+                        }
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
 }
 pub async fn search_messages() -> HttpResponse{
     HttpResponse::Ok().finish()
