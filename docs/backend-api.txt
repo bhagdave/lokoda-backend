@@ -173,3 +173,38 @@ URL:/delete_account
 Parameters:none
 Returns:
 Account deleted
+
+#Messaging
+
+Create a new group
+URL:create_group
+Parameters:name, users
+    users needs to be a JSON array even if it only contains one user
+Returns:
+The text Group added.
+
+Get a users contacts
+URL:get_contacts
+Parameters:None
+Returns:
+A JSON Array of users: {id, name, avatar_url, image_url, blocked }
+
+Get a users groups
+URL:get_groups
+Parameters:None
+Returns:
+A JSON Array of groups: {id, name, last_message (The text of the last message not the time)   } 
+
+Get a group
+URL:get_group/{group_id}
+Parameters:Group id in the path of the call
+Returns:
+A JSON array containing all of the information for the group:-
+{id, name, messages (an array of {id, user_id, message, created_at}), users (an array of {id, name, email , account_type, location, embed_url, avatar_url, image_url})
+
+Add a message
+URL:add_message (POST REQUEST) 
+Parameters:JSON array containing group_id and message
+Returns:Message added
+
+ 
