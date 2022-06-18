@@ -4,6 +4,7 @@ use sqlx::MySqlPool;
 use sqlx::mysql::{MySqlQueryResult};
 use sqlx::types::chrono::NaiveDateTime;
 use crate::models::users::*;
+use guid_create::GUID;
 
 
 use futures::stream::StreamExt;
@@ -45,6 +46,12 @@ pub struct Message {
 pub struct NewMessage {
     group_id : String,
     message: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct NewGroup {
+    name : String,
+    users: Vec<String>,
 }
 
 fn print_type_of<T>(_: &T) {
@@ -156,15 +163,14 @@ pub async fn block_contact(user_id: &str, contact_id :&str, pool: &web::Data<MyS
     .await
 }
 
-pub async fn create_group(name: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
-    sqlx::query!(
-        r#"
-        INSERT INTO `groups` (name)
-        VALUES(?)
-        "#,
-        name,
-    ).execute(pool.get_ref())
-    .await
+pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
+    let group = Group::new_group(&new_group.name, &pool).await;
+    group.add_new_user(&user, &pool).await?;
+    for user_id in &new_group.users {
+        group.add_new_user(&user_id, &pool).await?;
+    }
+
+    Ok(group)
 }
 
 
@@ -183,6 +189,21 @@ impl Group {
         }
     }
 
+    pub async fn new_group(name : &str, pool:&web::Data<MySqlPool>) -> Self {
+        let guid = GUID::rand();
+        sqlx::query!(
+            r#"
+            INSERT INTO `groups` (id, name)
+            VALUES(?, ?)
+            "#,
+            guid.to_string(),
+            name,
+        ).execute(pool.get_ref())
+        .await.unwrap();
+        log::info!("Group id is {}", guid);
+        Self {id : guid.to_string(), name: name.to_string(), messages:None, users:None}
+    }
+
     pub async fn add_new_message(self, user_id: &str, message: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
         sqlx::query!(
             r#"
@@ -192,6 +213,18 @@ impl Group {
             self.id, 
             user_id, 
             message,
+        ).execute(pool.get_ref())
+        .await
+    }
+
+    pub async fn add_new_user(&self, user_id: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+        sqlx::query!(
+            r#"
+            INSERT INTO `user_groups` (group_id, user_id)
+            VALUES(?, ?)
+            "#,
+            self.id, 
+            user_id, 
         ).execute(pool.get_ref())
         .await
     }

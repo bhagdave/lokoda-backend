@@ -36,9 +36,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/unembed_url", web::get().to(delete_embed_url))
             .route("/add_avatar", web::post().to(add_avatar))
             .route("/delete_avatar", web::get().to(delete_avatar))
-            .route("/messages", web::get().to(messages))
             .route("/newmessage", web::post().to(new_message))
-            .route("/searchmessage", web::post().to(search_messages))
             .route("/blockcontact", web::post().to(block_contact))
             .route("/register", web::post().to(register))
             .route("/login", web::post().to(login))
@@ -53,6 +51,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/get_groups", web::get().to(get_groups))
             .route("/get_group/{group_id}", web::get().to(get_group))
             .route("/add_message", web::post().to(new_message))
+            .route("/create_group", web::post().to(create_group))
             .app_data(db_pool.clone())
     })
     .listen(listener)?
