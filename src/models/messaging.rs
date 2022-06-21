@@ -32,6 +32,7 @@ pub struct Grouped {
     id: String,
     name: String,
     last_message: Option<String>,
+    last_message_date: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -62,7 +63,7 @@ pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<G
     sqlx::query_as!(Grouped,
         r#"
             SELECT 
-                id, name, message as last_message
+                id, name, message as last_message,DATE_FORMAT(last_message, "%M %d") as last_message_date
             FROM 
                 `groups` 
                 JOIN user_groups ON 
@@ -214,6 +215,14 @@ impl Group {
             self.id, 
             user_id, 
             message,
+        ).execute(pool.get_ref())
+        .await?;
+        sqlx::query!(
+            r#"
+            UPDATE `groups` SET last_message = now()
+            WHERE id = ?
+            "#,
+            self.id
         ).execute(pool.get_ref())
         .await
     }
