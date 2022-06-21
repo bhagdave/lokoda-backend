@@ -35,9 +35,12 @@ pub async fn new_message(session: Session, new_message: web::Json<NewMessage>, p
         }
     }
 }
+
 pub async fn block_contact() -> HttpResponse{
     HttpResponse::Ok().finish()
 }
+
+
 pub async fn new_contact(contact_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -186,8 +189,8 @@ pub async fn create_group(session: Session, new_group: web::Json<NewGroup>, pool
                 Ok(user) => {
                     let group = messaging::create_group(&user, new_group, &pool).await; 
                     match group {
-                        Ok(_) => {
-                            HttpResponse::Ok().json("Group added")
+                        Ok(group) => {
+                            HttpResponse::Ok().json(group)
                         }
                         Err(e) => {
                             log::error!("Failed to execute query: {:?}", e);

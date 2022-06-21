@@ -181,7 +181,7 @@ URL:create_group
 Parameters:name, users
     users needs to be a JSON array even if it only contains one user
 Returns:
-The text Group added.
+A JSON object of the group with a list of users in a JSON ARRAY
 
 Get a users contacts
 URL:get_contacts

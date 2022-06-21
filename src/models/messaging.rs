@@ -164,11 +164,12 @@ pub async fn block_contact(user_id: &str, contact_id :&str, pool: &web::Data<MyS
 }
 
 pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
-    let group = Group::new_group(&new_group.name, &pool).await;
+    let mut group = Group::new_group(&new_group.name, &pool).await;
     group.add_new_user(&user, &pool).await?;
     for user_id in &new_group.users {
         group.add_new_user(&user_id, &pool).await?;
     }
+    group.get_users(&pool).await;
 
     Ok(group)
 }
