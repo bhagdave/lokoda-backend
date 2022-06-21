@@ -41,6 +41,8 @@ pub struct Message {
     user_id : String,
     message: String,
     created_at: NaiveDateTime,
+    created_time: Option<String>,
+    created_day: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -72,6 +74,7 @@ pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<G
                 LEFT JOIN 
                     (SELECT group_id, message FROM messages LIMIT 1 ) x 
                     ON x.group_id = user_groups.group_id
+            ORDER BY `groups`.last_message desc
         "#,
         user
     ).fetch_all(pool.get_ref())
@@ -242,7 +245,8 @@ impl Group {
     pub async fn fetch_messages(&mut self, pool: &web::Data<MySqlPool>){
         match sqlx::query_as!(Message,
             r#"
-                SELECT id,user_id,message,created_at
+                SELECT id,user_id,message,created_at, 
+                    DATE_FORMAT(created_at, "%H:%i") AS created_time, DATE_FORMAT(created_at, "%W") AS created_day
                 FROM messages
                 WHERE
                     group_id = ?
