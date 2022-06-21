@@ -207,4 +207,7 @@ URL:add_message (POST REQUEST)
 Parameters:JSON array containing group_id and message
 Returns:Message added
 
- 
+Add a contact
+URL:add_contact/{user_id}
+Parameters:In the URL the user id of the person you want to add as a contact
+Returns:Contact added 
