@@ -102,7 +102,7 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
     .fetch_all(pool.get_ref())
     .await?;
     rows.iter_mut().map(|row| 
-        row.fetch_messages(&pool)
+        row.fetch_last_message(&pool)
     )
     .collect::<FuturesUnordered<_>>()
     .collect::<Vec<_>>()
@@ -251,6 +251,30 @@ impl Group {
                 WHERE
                     group_id = ?
                 ORDER BY created_at desc
+            "#,
+            self.id,
+        ).fetch_all(pool.get_ref())
+        .await
+        {
+            Ok(messages) => {
+                self.messages = Some(messages);
+            }
+            Err(_) => {
+                self.messages = None;
+            }
+        }
+    }
+
+    pub async fn fetch_last_message(&mut self, pool: &web::Data<MySqlPool>){
+        match sqlx::query_as!(Message,
+            r#"
+                SELECT id,user_id,message,created_at, 
+                    DATE_FORMAT(created_at, "%H:%i") AS created_time, DATE_FORMAT(created_at, "%W") AS created_day
+                FROM messages
+                WHERE
+                    group_id = ?
+                ORDER BY created_at desc
+                LIMIT 1
             "#,
             self.id,
         ).fetch_all(pool.get_ref())

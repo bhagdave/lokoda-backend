@@ -119,7 +119,7 @@ pub async fn get_groups(session: Session, pool: web::Data<MySqlPool>) -> HttpRes
             let userid = check_session_token(&token, &pool).await;
             match userid {
                 Ok(user) => {
-                    match messaging::get_groups(&user, &pool).await {
+                    match messaging::get_users_groups(&user, &pool).await {
                         Ok(groups) => {
                             HttpResponse::Ok().json(groups)
                         }
