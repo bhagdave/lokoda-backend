@@ -32,6 +32,7 @@ pub struct Grouped {
     id: String,
     name: String,
     last_message: Option<String>,
+    last_message_date: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -40,6 +41,8 @@ pub struct Message {
     user_id : String,
     message: String,
     created_at: NaiveDateTime,
+    created_time: Option<String>,
+    created_day: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -62,7 +65,7 @@ pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<G
     sqlx::query_as!(Grouped,
         r#"
             SELECT 
-                id, name, message as last_message
+                id, name, message as last_message,DATE_FORMAT(last_message, "%M %d") as last_message_date
             FROM 
                 `groups` 
                 JOIN user_groups ON 
@@ -71,6 +74,7 @@ pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<G
                 LEFT JOIN 
                     (SELECT group_id, message FROM messages LIMIT 1 ) x 
                     ON x.group_id = user_groups.group_id
+            ORDER BY `groups`.last_message desc
         "#,
         user
     ).fetch_all(pool.get_ref())
@@ -98,7 +102,7 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
     .fetch_all(pool.get_ref())
     .await?;
     rows.iter_mut().map(|row| 
-        row.fetch_messages(&pool)
+        row.fetch_last_message(&pool)
     )
     .collect::<FuturesUnordered<_>>()
     .collect::<Vec<_>>()
@@ -164,11 +168,12 @@ pub async fn block_contact(user_id: &str, contact_id :&str, pool: &web::Data<MyS
 }
 
 pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
-    let group = Group::new_group(&new_group.name, &pool).await;
+    let mut group = Group::new_group(&new_group.name, &pool).await;
     group.add_new_user(&user, &pool).await?;
     for user_id in &new_group.users {
         group.add_new_user(&user_id, &pool).await?;
     }
+    group.get_users(&pool).await;
 
     Ok(group)
 }
@@ -214,6 +219,14 @@ impl Group {
             user_id, 
             message,
         ).execute(pool.get_ref())
+        .await?;
+        sqlx::query!(
+            r#"
+            UPDATE `groups` SET last_message = now()
+            WHERE id = ?
+            "#,
+            self.id
+        ).execute(pool.get_ref())
         .await
     }
 
@@ -232,11 +245,36 @@ impl Group {
     pub async fn fetch_messages(&mut self, pool: &web::Data<MySqlPool>){
         match sqlx::query_as!(Message,
             r#"
-                SELECT id,user_id,message,created_at
+                SELECT id,user_id,message,created_at, 
+                    DATE_FORMAT(created_at, "%H:%i") AS created_time, DATE_FORMAT(created_at, "%W") AS created_day
                 FROM messages
                 WHERE
                     group_id = ?
                 ORDER BY created_at desc
+            "#,
+            self.id,
+        ).fetch_all(pool.get_ref())
+        .await
+        {
+            Ok(messages) => {
+                self.messages = Some(messages);
+            }
+            Err(_) => {
+                self.messages = None;
+            }
+        }
+    }
+
+    pub async fn fetch_last_message(&mut self, pool: &web::Data<MySqlPool>){
+        match sqlx::query_as!(Message,
+            r#"
+                SELECT id,user_id,message,created_at, 
+                    DATE_FORMAT(created_at, "%H:%i") AS created_time, DATE_FORMAT(created_at, "%W") AS created_day
+                FROM messages
+                WHERE
+                    group_id = ?
+                ORDER BY created_at desc
+                LIMIT 1
             "#,
             self.id,
         ).fetch_all(pool.get_ref())

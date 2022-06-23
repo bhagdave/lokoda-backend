@@ -181,7 +181,7 @@ URL:create_group
 Parameters:name, users
     users needs to be a JSON array even if it only contains one user
 Returns:
-The text Group added.
+A JSON object of the group with a list of users in a JSON ARRAY
 
 Get a users contacts
 URL:get_contacts
@@ -207,4 +207,7 @@ URL:add_message (POST REQUEST)
 Parameters:JSON array containing group_id and message
 Returns:Message added
 
- 
+Add a contact
+URL:add_contact/{user_id}
+Parameters:In the URL the user id of the person you want to add as a contact
+Returns:Contact added 
