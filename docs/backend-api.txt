@@ -211,3 +211,8 @@ Add a contact
 URL:add_contact/{user_id}
 Parameters:In the URL the user id of the person you want to add as a contact
 Returns:Contact added 
+
+Delete a contact
+URL:delete_contact/{user_id}
+Parameters:In the URL the user id of the person you want to add as a contact
+Returns:Contact deleted 

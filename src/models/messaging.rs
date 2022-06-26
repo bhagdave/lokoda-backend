@@ -42,7 +42,7 @@ pub struct Message {
     message: String,
     created_at: NaiveDateTime,
     created_time: Option<String>,
-    created_day: Option<String>,
+    created_date: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -155,6 +155,18 @@ pub async fn add_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySql
     .await
 }
 
+pub async fn delete_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        DELETE FROM contacts 
+        WHERE user_id = ? AND contact_id = ?
+        "#,
+        user_id,
+        contact_id,
+    ).execute(pool.get_ref())
+    .await
+}
+
 pub async fn block_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -246,7 +258,7 @@ impl Group {
         match sqlx::query_as!(Message,
             r#"
                 SELECT id,user_id,message,created_at, 
-                    DATE_FORMAT(created_at, "%H:%i") AS created_time, DATE_FORMAT(created_at, "%W") AS created_day
+                    DATE_FORMAT(created_at, "%H:%i") AS created_time, DATE_FORMAT(created_at, "%D %b") AS created_date
                 FROM messages
                 WHERE
                     group_id = ?
@@ -269,7 +281,7 @@ impl Group {
         match sqlx::query_as!(Message,
             r#"
                 SELECT id,user_id,message,created_at, 
-                    DATE_FORMAT(created_at, "%H:%i") AS created_time, DATE_FORMAT(created_at, "%W") AS created_day
+                    DATE_FORMAT(created_at, "%H:%i") AS created_time, DATE_FORMAT(created_at, "%D %b") AS created_date
                 FROM messages
                 WHERE
                     group_id = ?

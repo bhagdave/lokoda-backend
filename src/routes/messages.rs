@@ -75,8 +75,38 @@ pub async fn new_contact(contact_id: web::Path<String>, session: Session, pool: 
     }
 }
 
-pub async fn delete_contact() -> HttpResponse{
-    HttpResponse::Ok().finish()
+pub async fn delete_contact(contact_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    match messaging::delete_contact(&user, &contact_id, &pool).await {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("Contact removed")
+                        }
+                        Err(e) => {
+                            log::error!("Whoops: {:?}", e);
+                            HttpResponse::Ok().json("Error")
+                        }
+                    }
+                }
+                Err(e) => {
+                    log::error!("Got user from check_session_token : {:?}", e);
+                    HttpResponse::Ok().json("not logged_in but have a cookie?")
+                }
+            }
+        }
+        Ok(None) => {
+            log::info!("Was not able to get tk from session cookie");
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(e) => {
+            log::error!("Whoops: {:?}", e);
+            HttpResponse::Ok().json("Error")
+        }
+    }
 }
 pub async fn get_contacts(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
