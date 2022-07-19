@@ -137,6 +137,7 @@ pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<V
                 contacts 
             JOIN users ON contact_id = users.id
             WHERE contacts.user_id = ?
+            ORDER BY users.name
         "#,
         user
     ).fetch_all(pool.get_ref())
