@@ -190,6 +190,17 @@ pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web
     Ok(group)
 }
 
+pub async fn delete_group(group: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        DELETE FROM `groups` 
+        WHERE id = ?
+        "#,
+        group,
+    ).execute(pool.get_ref())
+    .await
+}
+
 
 impl Group { 
     pub async fn get_group(group_id : &str, pool: &web::Data<MySqlPool>) -> Self {
@@ -319,4 +330,5 @@ impl Group {
             }
         }
     }
+
 }
