@@ -38,6 +38,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/delete_avatar", web::get().to(delete_avatar))
             .route("/newmessage", web::post().to(new_message))
             .route("/blockcontact/{contact_id}", web::get().to(block_contact))
+            .route("/blockcontacts", web::post().to(block_contacts))
             .route("/register", web::post().to(register))
             .route("/login", web::post().to(login))
             .route("/reset_password", web::post().to(reset_password))

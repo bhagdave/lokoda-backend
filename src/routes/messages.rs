@@ -70,6 +70,41 @@ pub async fn block_contact(contact_id: web::Path<String>, session: Session, pool
     }
 }
 
+pub async fn block_contacts(session: Session, contacts: web::Json<ContactList>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    for c in &contacts.contacts {
+                        match messaging::block_contact(&user, &c, &pool).await {
+                            Ok(_) => {
+                                log::info!("Contact blocked id:{}", c);
+                            }
+                            Err(e) => {
+                                log::error!("Whoops: {:?}", e);
+                            }
+                        }
+                    }
+                    HttpResponse::Ok().json("Contacts blocked")
+                }
+                Err(e) => {
+                    log::error!("Got user from check_session_token : {:?}", e);
+                    HttpResponse::Ok().json("not logged_in but have a cookie?")
+                }
+            }
+        }
+        Ok(None) => {
+            log::info!("Was not able to get tk from session cookie");
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(e) => {
+            log::error!("Whoops: {:?}", e);
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
 
 pub async fn new_contact(contact_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
