@@ -19,6 +19,11 @@ pub struct Contact {
     blocked: Option<i8>
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ContactList {
+    pub contacts: Vec<String>
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct Group {
     id: String,
