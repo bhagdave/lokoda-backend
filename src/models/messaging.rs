@@ -30,6 +30,7 @@ pub struct Group {
     name: String,
     messages: Option<Vec<Message>>,
     users: Option<Vec<ProfileData>>,
+    last_message: Option<NaiveDateTime>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -103,17 +104,23 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
         "#,
         user
     )
-    .map(|row| (Group { id: row.id, name: row.name, messages: None, users: None }))
+    .map(|row| (Group { id: row.id, name: row.name, messages: None, users: None, last_message: None }))
     .fetch_all(pool.get_ref())
     .await?;
     rows.iter_mut().map(|row| 
-        row.fetch_last_message(&pool)
+        row.fetch_messages(&pool)
     )
     .collect::<FuturesUnordered<_>>()
     .collect::<Vec<_>>()
     .await;
     rows.iter_mut().map(|row| 
         row.get_users(&pool)
+    )
+    .collect::<FuturesUnordered<_>>()
+    .collect::<Vec<_>>()
+    .await;
+    rows.iter_mut().map(|row| 
+        row.fetch_last_message(&pool)
     )
     .collect::<FuturesUnordered<_>>()
     .collect::<Vec<_>>()
@@ -215,10 +222,10 @@ impl Group {
             .await;
         match group {
             Ok(group) => {
-                Self {id : group_id.to_string(), name: group.name, messages:None, users:None}
+                Self {id : group_id.to_string(), name: group.name, messages:None, users:None, last_message: None}
             }
             Err(_) => {
-                Self {id : group_id.to_string(), name: "NOTFOUND".to_string(), messages:None, users:None}
+                Self {id : group_id.to_string(), name: "NOTFOUND".to_string(), messages:None, users:None, last_message: None}
             }
         }
     }
@@ -235,7 +242,7 @@ impl Group {
         ).execute(pool.get_ref())
         .await.unwrap();
         log::info!("Group id is {}", guid);
-        Self {id : guid.to_string(), name: name.to_string(), messages:None, users:None}
+        Self {id : guid.to_string(), name: name.to_string(), messages:None, users:None, last_message: None}
     }
 
     pub async fn add_new_message(self, user_id: &str, message: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
@@ -306,14 +313,14 @@ impl Group {
                 LIMIT 1
             "#,
             self.id,
-        ).fetch_all(pool.get_ref())
+        ).fetch_one(pool.get_ref())
         .await
         {
-            Ok(messages) => {
-                self.messages = Some(messages);
+            Ok(message) => {
+                self.last_message = Some(message.created_at);
             }
             Err(_) => {
-                self.messages = None;
+                self.last_message = None;
             }
         }
     }
