@@ -210,14 +210,14 @@ pub async fn delete_contacts(session: Session, contacts: web::Json<ContactList>,
     }
 }
 
-pub async fn delete_group(group_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
+pub async fn leave_group(group_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
         Ok(Some(token)) => {
             let userid = check_session_token(&token, &pool).await;
             match userid {
                 Ok(user) => {
-                    match messaging::delete_group(&group_id, &pool).await {
+                    match messaging::leave_group(&user, &group_id, &pool).await {
                         Ok(_) => {
                             HttpResponse::Ok().json("Group removed")
                         }

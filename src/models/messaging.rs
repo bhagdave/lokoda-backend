@@ -203,12 +203,14 @@ pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web
     Ok(group)
 }
 
-pub async fn delete_group(group: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+pub async fn leave_group(user: &str, group: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
-        DELETE FROM `groups` 
-        WHERE id = ?
+        DELETE FROM `user_groups` 
+        WHERE user_id = ?
+        AND group_id = ?
         "#,
+        user,
         group,
     ).execute(pool.get_ref())
     .await
