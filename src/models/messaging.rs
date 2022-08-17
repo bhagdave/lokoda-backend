@@ -125,6 +125,7 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
     .collect::<FuturesUnordered<_>>()
     .collect::<Vec<_>>()
     .await;
+    rows.sort_by(|a, b| b.last_message.cmp(&a.last_message));
     Ok(rows)
 }
 
