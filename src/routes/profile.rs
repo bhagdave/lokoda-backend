@@ -39,7 +39,6 @@ pub async fn profile_index(session: Session, pool: web::Data<MySqlPool>) -> Http
         }
     }
 }
-
 pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
     match get_profile_data(&user_id, &pool).await {
         Ok(profile) => {
@@ -51,7 +50,6 @@ pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>)
         }
     }
 }
-
 pub async fn profile_update(session: Session, profile: web::Json<UpdateProfileData>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -83,7 +81,36 @@ pub async fn profile_update(session: Session, profile: web::Json<UpdateProfileDa
         }
     }
 }
-
+pub async fn bio_update(session: Session, bio: web::Json<BioUpdate>, pool: web::Data<MySqlPool>) -> HttpResponse{
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    let result = update_bio(&user, &bio.bio, &pool).await;
+                    match result {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("BIO Updated")
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("something bad happened")
+                        }
+                    }
+                }
+                Err(_) => {
+                    HttpResponse::Ok().json("not logged_in")
+                }
+            }
+        }
+        Ok(None) => {
+            HttpResponse::Ok().json("No Session")
+        }
+        Err(_) => {
+            HttpResponse::Ok().json("Error")
+        }
+    }
+}
 pub async fn get_genres(pool: web::Data<MySqlPool>)-> HttpResponse{
     let genres = get_genre_list(&pool).await;
     match genres {
@@ -201,7 +228,6 @@ pub async fn get_genres_for_profile(user_id: web::Path<String>, pool: web::Data<
         }
     }
 }
-
 pub async fn get_shows_for_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
     // Need to know the user id.
     match crate::models::shows::get_user_shows(&user_id, &pool).await
@@ -245,7 +271,6 @@ pub async fn add_show(session: Session, add_show: web::Json<Show>, pool: web::Da
         }
     }
 }
-
 pub async fn cancel_user_show(session: Session, show_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -277,7 +302,6 @@ pub async fn cancel_user_show(session: Session, show_id: web::Path<String>, pool
         }
     }
 }
-
 pub async fn update_show(session: Session, update_show: web::Json<Show>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -309,7 +333,6 @@ pub async fn update_show(session: Session, update_show: web::Json<Show>, pool: w
         }
     }
 }
-
 pub async fn add_embed_url(session: Session, add_url: web::Json<AddUrl>, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -372,7 +395,6 @@ pub async fn delete_embed_url(session: Session, pool: web::Data<MySqlPool>) -> H
         }
     }
 }
-
 pub async fn add_image_url(session: Session, add_url: web::Json<AddUrl>, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -497,7 +519,6 @@ pub async fn delete_avatar(session: Session, pool: web::Data<MySqlPool>) -> Http
         }
     }
 }
-
 pub async fn update_user_password(session: Session, new_password: web::Json<PasswordUpdate>, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -545,8 +566,6 @@ pub async fn update_user_password(session: Session, new_password: web::Json<Pass
         }
     }
 }
-
-
 pub async fn delete_account(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
