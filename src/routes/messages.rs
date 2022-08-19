@@ -35,7 +35,6 @@ pub async fn new_message(session: Session, new_message: web::Json<NewMessage>, p
         }
     }
 }
-
 pub async fn block_contact(contact_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -69,7 +68,6 @@ pub async fn block_contact(contact_id: web::Path<String>, session: Session, pool
         }
     }
 }
-
 pub async fn block_contacts(session: Session, contacts: web::Json<ContactList>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -105,7 +103,6 @@ pub async fn block_contacts(session: Session, contacts: web::Json<ContactList>, 
         }
     }
 }
-
 pub async fn new_contact(contact_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -139,7 +136,6 @@ pub async fn new_contact(contact_id: web::Path<String>, session: Session, pool: 
         }
     }
 }
-
 pub async fn delete_contact(contact_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -173,7 +169,6 @@ pub async fn delete_contact(contact_id: web::Path<String>, session: Session, poo
         }
     }
 }
-
 pub async fn delete_contacts(session: Session, contacts: web::Json<ContactList>, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -209,7 +204,6 @@ pub async fn delete_contacts(session: Session, contacts: web::Json<ContactList>,
         }
     }
 }
-
 pub async fn leave_group(group_id: web::Path<String>, session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -276,7 +270,6 @@ pub async fn get_contacts(session: Session, pool: web::Data<MySqlPool>) -> HttpR
         }
     }
 }
-
 pub async fn get_groups(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -310,7 +303,6 @@ pub async fn get_groups(session: Session, pool: web::Data<MySqlPool>) -> HttpRes
         }
     }
 }
-
 pub async fn get_group(group_id: web::Path<String> ,session: Session, pool: web::Data<MySqlPool>) -> HttpResponse{
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -344,7 +336,6 @@ pub async fn get_group(group_id: web::Path<String> ,session: Session, pool: web:
         }
     }
 }
-
 pub async fn create_group(session: Session, new_group: web::Json<NewGroup>, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {

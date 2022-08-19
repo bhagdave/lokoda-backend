@@ -88,7 +88,15 @@ pub async fn bio_update(session: Session, bio: web::Json<BioUpdate>, pool: web::
             let userid = check_session_token(&token, &pool).await;
             match userid {
                 Ok(user) => {
-                    HttpResponse::Ok().json("BIO Updated")
+                    let result = update_bio(&user, &bio.bio, &pool).await;
+                    match result {
+                        Ok(_) => {
+                            HttpResponse::Ok().json("BIO Updated")
+                        }
+                        Err(_) => {
+                            HttpResponse::Ok().json("something bad happened")
+                        }
+                    }
                 }
                 Err(_) => {
                     HttpResponse::Ok().json("not logged_in")
