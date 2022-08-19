@@ -21,6 +21,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/profile", web::get().to(profile_index))
             .route("/profile/{user_id}", web::get().to(get_profile))
             .route("/profile_update", web::post().to(profile_update))
+            .route("/add_bio", web::post().to(bio_update))
             .route("/get_genres", web::get().to(get_genres))
             .route("/get_user_genres", web::get().to(get_user_genres))
             .route("/get_genres_for_profile/{user_id}", web::get().to(get_genres_for_profile))

@@ -6,7 +6,6 @@ use sqlx::types::chrono::NaiveDateTime;
 use crate::models::users::*;
 use guid_create::GUID;
 
-
 use futures::stream::StreamExt;
 use futures::stream::futures_unordered::FuturesUnordered;
 
@@ -62,11 +61,9 @@ pub struct NewGroup {
     name : String,
     users: Vec<String>,
 }
-
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
-
 pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Grouped>, sqlx::Error>{
     sqlx::query_as!(Grouped,
         r#"
@@ -86,12 +83,10 @@ pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<G
     ).fetch_all(pool.get_ref())
     .await
 }
-
 pub async fn new_message(user: &str, new_message: &web::Json<NewMessage>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
     let group = Group::get_group(&new_message.group_id, pool).await;
     group.add_new_message(&user, &new_message.message, pool).await
 }
-
 pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Group>, sqlx::Error>{
     let mut rows = sqlx::query!(
         r#"
@@ -128,15 +123,12 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
     rows.sort_by(|a, b| b.last_message.cmp(&a.last_message));
     Ok(rows)
 }
-
 pub async fn get_group(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error>{
     let mut group = Group::get_group(group_id, pool).await;
     group.fetch_messages(pool).await;
     group.get_users(&pool).await;
     Ok(group)
 }
-
-
 pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Contact>, sqlx::Error>{
     sqlx::query_as!(Contact,
         r#"
@@ -156,7 +148,6 @@ pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<V
     ).fetch_all(pool.get_ref())
     .await
 }
-
 pub async fn add_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -168,7 +159,6 @@ pub async fn add_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySql
     ).execute(pool.get_ref())
     .await
 }
-
 pub async fn delete_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -180,7 +170,6 @@ pub async fn delete_contact(user_id: &str, contact_id :&str, pool: &web::Data<My
     ).execute(pool.get_ref())
     .await
 }
-
 pub async fn block_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -192,7 +181,6 @@ pub async fn block_contact(user_id: &str, contact_id :&str, pool: &web::Data<MyS
     ).execute(pool.get_ref())
     .await
 }
-
 pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
     let mut group = Group::new_group(&new_group.name, &pool).await;
     group.add_new_user(&user, &pool).await?;
@@ -203,7 +191,6 @@ pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web
 
     Ok(group)
 }
-
 pub async fn leave_group(user: &str, group: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -232,7 +219,6 @@ impl Group {
             }
         }
     }
-
     pub async fn new_group(name : &str, pool:&web::Data<MySqlPool>) -> Self {
         let guid = GUID::rand();
         sqlx::query!(
@@ -247,7 +233,6 @@ impl Group {
         log::info!("Group id is {}", guid);
         Self {id : guid.to_string(), name: name.to_string(), messages:None, users:None, last_message: None}
     }
-
     pub async fn add_new_message(self, user_id: &str, message: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
         sqlx::query!(
             r#"
@@ -268,7 +253,6 @@ impl Group {
         ).execute(pool.get_ref())
         .await
     }
-
     pub async fn add_new_user(&self, user_id: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
         sqlx::query!(
             r#"
@@ -280,7 +264,6 @@ impl Group {
         ).execute(pool.get_ref())
         .await
     }
-
     pub async fn fetch_messages(&mut self, pool: &web::Data<MySqlPool>){
         match sqlx::query_as!(Message,
             r#"
@@ -303,7 +286,6 @@ impl Group {
             }
         }
     }
-
     pub async fn fetch_last_message(&mut self, pool: &web::Data<MySqlPool>){
         match sqlx::query_as!(Message,
             r#"
@@ -327,11 +309,10 @@ impl Group {
             }
         }
     }
-
     pub async fn get_users(&mut self, pool: &web::Data<MySqlPool>){
         match sqlx::query_as!(ProfileData,
             r#"
-                SELECT users.id, users.name, users.email, users.account_type, users.location, users.embed_url, users.image_url, users.avatar_url
+                SELECT users.id, users.name, users.email, users.account_type, users.location, users.embed_url, users.image_url, users.avatar_url, users.bio
                 FROM users
                 JOIN user_groups ON user_groups.user_id = users.id AND group_id = ?
             "#,
@@ -346,5 +327,4 @@ impl Group {
             }
         }
     }
-
 }

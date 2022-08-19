@@ -61,6 +61,11 @@ pub struct AddUrl {
 pub struct Profile {
     pub id: String,
 }
+#[derive(serde::Deserialize)]
+pub struct BioUpdate {
+    pub id: String,
+    pub bio: String,
+}
 
 #[derive(serde::Deserialize, Serialize)]
 pub struct ProfileData {
@@ -71,7 +76,8 @@ pub struct ProfileData {
     pub location: String,
     pub embed_url: Option<String>,
     pub avatar_url: Option<String>,
-    pub image_url: Option<String>
+    pub image_url: Option<String>,
+    pub bio: Option<String>
 }
 
 #[derive(serde::Deserialize, Serialize)]
@@ -84,20 +90,34 @@ pub struct UpdateProfileData {
     image_url: Option<String>
 }
 
+
+impl ProfileData{
+    pub async fn get_profile(user_id : &str, pool: &web::Data<MySqlPool>) -> Self {
+        let profile = sqlx::query_as!(ProfileData, "SELECT id, name, email, account_type, location, embed_url, avatar_url, image_url, bio 
+                                                    FROM `users` WHERE id = ?", user_id)
+            .fetch_one(pool.get_ref())
+            .await;
+        match profile
+        {
+            Ok(profile) => { profile }
+            Err(_) => { Self {  id : user_id.to_string(), 
+                                account_type : "".to_string(),
+                                email        : "".to_string(),
+                                name         : "".to_string(),
+                                bio          : None,
+                                location     : "".to_string(), 
+                                embed_url    : None, 
+                                avatar_url   : None, 
+                                image_url    : None
+                      }
+            }
+        }
+    }
+}
+
 pub async fn get_profile_data(user: &str, pool: &web::Data<MySqlPool>) -> Result<ProfileData, sqlx::Error> {
-    // get user profile from database table
-    let profile_record = sqlx::query_as!(ProfileData,
-        r#"
-            SELECT id, name, email, account_type, location, embed_url, image_url, avatar_url
-            FROM users
-            WHERE id = ?
-            LIMIT 1
-        "#,
-        user
-    )
-    .fetch_one(pool.get_ref())
-    .await;
-    profile_record
+    let profile = ProfileData::get_profile(user, pool).await;
+    Ok(profile)
 }
 
 pub async fn get_login_data(email: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
