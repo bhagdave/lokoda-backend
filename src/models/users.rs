@@ -4,6 +4,7 @@ use sqlx::mysql::MySqlQueryResult;
 use guid_create::GUID;
 use serde::{Serialize};
 use bcrypt::*;
+use ammonia::clean;
 
 
 #[derive(serde::Deserialize, Serialize)]
@@ -134,7 +135,8 @@ pub async fn get_profile_data(user: &str, pool: &web::Data<MySqlPool>) -> Result
 
 pub async fn update_bio(user: &str, bio: &str, pool: &web::Data<MySqlPool>) -> Result<ProfileData, sqlx::Error> {
     let mut profile = ProfileData::get_profile(user, pool).await;
-    profile.update_bio(&bio, pool).await;
+    let safe_content = clean(&bio);
+    profile.update_bio(&safe_content, pool).await;
     Ok(profile)
 }
 pub async fn get_login_data(email: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
