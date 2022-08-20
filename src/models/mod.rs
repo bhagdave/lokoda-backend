@@ -1,11 +1,11 @@
-pub mod users; 
 pub mod genre;
-pub mod shows;
-pub mod search;
 pub mod messaging;
+pub mod search;
+pub mod shows;
+pub mod users;
 
-pub use users::*; 
 pub use genre::*;
-pub use shows::*;
-pub use search::*;
 pub use messaging::*;
+pub use search::*;
+pub use shows::*;
+pub use users::*;

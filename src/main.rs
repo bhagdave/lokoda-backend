@@ -1,8 +1,8 @@
-use std::net::TcpListener;
-use lokoda_backend::startup::run;
-use lokoda_backend::configuration::*;
-use sqlx::mysql::MySqlPoolOptions;
 use env_logger::Env;
+use lokoda_backend::configuration::*;
+use lokoda_backend::startup::run;
+use sqlx::mysql::MySqlPoolOptions;
+use std::net::TcpListener;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -13,7 +13,10 @@ async fn main() -> std::io::Result<()> {
         .connect_timeout(std::time::Duration::from_secs(2))
         .connect_lazy(&configuration.database.connection_string())
         .expect("Failed to connect to database");
-    let address = format!("{}:{}", configuration.application.host, configuration.application.port);
+    let address = format!(
+        "{}:{}",
+        configuration.application.host, configuration.application.port
+    );
     let listener = TcpListener::bind(address)?;
     run(listener, connection_pool)?.await
 }

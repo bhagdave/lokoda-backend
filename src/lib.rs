@@ -1,5 +1,5 @@
-pub mod routes;
-pub mod emails;
 pub mod configuration;
-pub mod startup;
+pub mod emails;
 pub mod models;
+pub mod routes;
+pub mod startup;

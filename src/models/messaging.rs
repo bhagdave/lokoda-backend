@@ -1,13 +1,13 @@
-use actix_web::web;
-use serde::{Serialize, Deserialize};
-use sqlx::MySqlPool;
-use sqlx::mysql::{MySqlQueryResult};
-use sqlx::types::chrono::NaiveDateTime;
 use crate::models::users::*;
+use actix_web::web;
 use guid_create::GUID;
+use serde::{Deserialize, Serialize};
+use sqlx::mysql::MySqlQueryResult;
+use sqlx::types::chrono::NaiveDateTime;
+use sqlx::MySqlPool;
 
-use futures::stream::StreamExt;
 use futures::stream::futures_unordered::FuturesUnordered;
+use futures::stream::StreamExt;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Contact {
@@ -15,12 +15,12 @@ pub struct Contact {
     image_url: Option<String>,
     avatar_url: Option<String>,
     name: String,
-    blocked: Option<i8>
+    blocked: Option<i8>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ContactList {
-    pub contacts: Vec<String>
+    pub contacts: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -42,8 +42,8 @@ pub struct Grouped {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Message {
-    id : String,
-    user_id : String,
+    id: String,
+    user_id: String,
     message: String,
     created_at: NaiveDateTime,
     created_time: Option<String>,
@@ -52,19 +52,22 @@ pub struct Message {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewMessage {
-    group_id : String,
+    group_id: String,
     message: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewGroup {
-    name : String,
+    name: String,
     users: Vec<String>,
 }
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
-pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Grouped>, sqlx::Error>{
+pub async fn get_groups(
+    user: &str,
+    pool: &web::Data<MySqlPool>,
+) -> Result<Vec<Grouped>, sqlx::Error> {
     sqlx::query_as!(Grouped,
         r#"
             SELECT 
@@ -83,11 +86,20 @@ pub async fn get_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<G
     ).fetch_all(pool.get_ref())
     .await
 }
-pub async fn new_message(user: &str, new_message: &web::Json<NewMessage>, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+pub async fn new_message(
+    user: &str,
+    new_message: &web::Json<NewMessage>,
+    pool: &web::Data<MySqlPool>,
+) -> Result<MySqlQueryResult, sqlx::Error> {
     let group = Group::get_group(&new_message.group_id, pool).await;
-    group.add_new_message(&user, &new_message.message, pool).await
+    group
+        .add_new_message(&user, &new_message.message, pool)
+        .await
 }
-pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Group>, sqlx::Error>{
+pub async fn get_users_groups(
+    user: &str,
+    pool: &web::Data<MySqlPool>,
+) -> Result<Vec<Group>, sqlx::Error> {
     let mut rows = sqlx::query!(
         r#"
             SELECT 
@@ -99,38 +111,47 @@ pub async fn get_users_groups(user: &str, pool: &web::Data<MySqlPool>) -> Result
         "#,
         user
     )
-    .map(|row| (Group { id: row.id, name: row.name, messages: None, users: None, last_message: None }))
+    .map(|row| {
+        (Group {
+            id: row.id,
+            name: row.name,
+            messages: None,
+            users: None,
+            last_message: None,
+        })
+    })
     .fetch_all(pool.get_ref())
     .await?;
-    rows.iter_mut().map(|row| 
-        row.fetch_messages(&pool)
-    )
-    .collect::<FuturesUnordered<_>>()
-    .collect::<Vec<_>>()
-    .await;
-    rows.iter_mut().map(|row| 
-        row.get_users(&pool)
-    )
-    .collect::<FuturesUnordered<_>>()
-    .collect::<Vec<_>>()
-    .await;
-    rows.iter_mut().map(|row| 
-        row.fetch_last_message(&pool)
-    )
-    .collect::<FuturesUnordered<_>>()
-    .collect::<Vec<_>>()
-    .await;
+    rows.iter_mut()
+        .map(|row| row.fetch_messages(&pool))
+        .collect::<FuturesUnordered<_>>()
+        .collect::<Vec<_>>()
+        .await;
+    rows.iter_mut()
+        .map(|row| row.get_users(&pool))
+        .collect::<FuturesUnordered<_>>()
+        .collect::<Vec<_>>()
+        .await;
+    rows.iter_mut()
+        .map(|row| row.fetch_last_message(&pool))
+        .collect::<FuturesUnordered<_>>()
+        .collect::<Vec<_>>()
+        .await;
     rows.sort_by(|a, b| b.last_message.cmp(&a.last_message));
     Ok(rows)
 }
-pub async fn get_group(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error>{
+pub async fn get_group(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
     let mut group = Group::get_group(group_id, pool).await;
     group.fetch_messages(pool).await;
     group.get_users(&pool).await;
     Ok(group)
 }
-pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<Vec<Contact>, sqlx::Error>{
-    sqlx::query_as!(Contact,
+pub async fn fetch_contacts(
+    user: &str,
+    pool: &web::Data<MySqlPool>,
+) -> Result<Vec<Contact>, sqlx::Error> {
+    sqlx::query_as!(
+        Contact,
         r#"
             SELECT 
                 users.id, 
@@ -145,10 +166,15 @@ pub async fn fetch_contacts(user: &str, pool: &web::Data<MySqlPool>) -> Result<V
             ORDER BY users.name
         "#,
         user
-    ).fetch_all(pool.get_ref())
+    )
+    .fetch_all(pool.get_ref())
     .await
 }
-pub async fn add_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+pub async fn add_contact(
+    user_id: &str,
+    contact_id: &str,
+    pool: &web::Data<MySqlPool>,
+) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
         INSERT INTO contacts (user_id, contact_id, blocked)
@@ -156,10 +182,15 @@ pub async fn add_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySql
         "#,
         user_id,
         contact_id,
-    ).execute(pool.get_ref())
+    )
+    .execute(pool.get_ref())
     .await
 }
-pub async fn delete_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+pub async fn delete_contact(
+    user_id: &str,
+    contact_id: &str,
+    pool: &web::Data<MySqlPool>,
+) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
         DELETE FROM contacts 
@@ -167,10 +198,15 @@ pub async fn delete_contact(user_id: &str, contact_id :&str, pool: &web::Data<My
         "#,
         user_id,
         contact_id,
-    ).execute(pool.get_ref())
+    )
+    .execute(pool.get_ref())
     .await
 }
-pub async fn block_contact(user_id: &str, contact_id :&str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+pub async fn block_contact(
+    user_id: &str,
+    contact_id: &str,
+    pool: &web::Data<MySqlPool>,
+) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
         UPDATE contacts SET blocked = 1
@@ -178,10 +214,15 @@ pub async fn block_contact(user_id: &str, contact_id :&str, pool: &web::Data<MyS
         "#,
         user_id,
         contact_id,
-    ).execute(pool.get_ref())
+    )
+    .execute(pool.get_ref())
     .await
 }
-pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
+pub async fn create_group(
+    user: &str,
+    new_group: web::Json<NewGroup>,
+    pool: &web::Data<MySqlPool>,
+) -> Result<Group, sqlx::Error> {
     let mut group = Group::new_group(&new_group.name, &pool).await;
     group.add_new_user(&user, &pool).await?;
     for user_id in &new_group.users {
@@ -191,7 +232,11 @@ pub async fn create_group(user: &str, new_group: web::Json<NewGroup>, pool: &web
 
     Ok(group)
 }
-pub async fn leave_group(user: &str, group: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error> {
+pub async fn leave_group(
+    user: &str,
+    group: &str,
+    pool: &web::Data<MySqlPool>,
+) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
         DELETE FROM `user_groups` 
@@ -200,26 +245,34 @@ pub async fn leave_group(user: &str, group: &str, pool: &web::Data<MySqlPool>) -
         "#,
         user,
         group,
-    ).execute(pool.get_ref())
+    )
+    .execute(pool.get_ref())
     .await
 }
 
-
-impl Group { 
-    pub async fn get_group(group_id : &str, pool: &web::Data<MySqlPool>) -> Self {
+impl Group {
+    pub async fn get_group(group_id: &str, pool: &web::Data<MySqlPool>) -> Self {
         let group = sqlx::query!("SELECT name FROM `groups` WHERE id = ?", group_id)
             .fetch_one(pool.get_ref())
             .await;
         match group {
-            Ok(group) => {
-                Self {id : group_id.to_string(), name: group.name, messages:None, users:None, last_message: None}
-            }
-            Err(_) => {
-                Self {id : group_id.to_string(), name: "NOTFOUND".to_string(), messages:None, users:None, last_message: None}
-            }
+            Ok(group) => Self {
+                id: group_id.to_string(),
+                name: group.name,
+                messages: None,
+                users: None,
+                last_message: None,
+            },
+            Err(_) => Self {
+                id: group_id.to_string(),
+                name: "NOTFOUND".to_string(),
+                messages: None,
+                users: None,
+                last_message: None,
+            },
         }
     }
-    pub async fn new_group(name : &str, pool:&web::Data<MySqlPool>) -> Self {
+    pub async fn new_group(name: &str, pool: &web::Data<MySqlPool>) -> Self {
         let guid = GUID::rand();
         sqlx::query!(
             r#"
@@ -228,21 +281,35 @@ impl Group {
             "#,
             guid.to_string(),
             name,
-        ).execute(pool.get_ref())
-        .await.unwrap();
+        )
+        .execute(pool.get_ref())
+        .await
+        .unwrap();
         log::info!("Group id is {}", guid);
-        Self {id : guid.to_string(), name: name.to_string(), messages:None, users:None, last_message: None}
+        Self {
+            id: guid.to_string(),
+            name: name.to_string(),
+            messages: None,
+            users: None,
+            last_message: None,
+        }
     }
-    pub async fn add_new_message(self, user_id: &str, message: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    pub async fn add_new_message(
+        self,
+        user_id: &str,
+        message: &str,
+        pool: &web::Data<MySqlPool>,
+    ) -> Result<MySqlQueryResult, sqlx::Error> {
         sqlx::query!(
             r#"
             INSERT INTO `messages` (group_id, user_id, message, created_at)
             VALUES(?, ?, ?, NOW())
             "#,
-            self.id, 
-            user_id, 
+            self.id,
+            user_id,
             message,
-        ).execute(pool.get_ref())
+        )
+        .execute(pool.get_ref())
         .await?;
         sqlx::query!(
             r#"
@@ -250,21 +317,27 @@ impl Group {
             WHERE id = ?
             "#,
             self.id
-        ).execute(pool.get_ref())
+        )
+        .execute(pool.get_ref())
         .await
     }
-    pub async fn add_new_user(&self, user_id: &str, pool: &web::Data<MySqlPool>) -> Result<MySqlQueryResult, sqlx::Error>{
+    pub async fn add_new_user(
+        &self,
+        user_id: &str,
+        pool: &web::Data<MySqlPool>,
+    ) -> Result<MySqlQueryResult, sqlx::Error> {
         sqlx::query!(
             r#"
             INSERT INTO `user_groups` (group_id, user_id)
             VALUES(?, ?)
             "#,
-            self.id, 
-            user_id, 
-        ).execute(pool.get_ref())
+            self.id,
+            user_id,
+        )
+        .execute(pool.get_ref())
         .await
     }
-    pub async fn fetch_messages(&mut self, pool: &web::Data<MySqlPool>){
+    pub async fn fetch_messages(&mut self, pool: &web::Data<MySqlPool>) {
         match sqlx::query_as!(Message,
             r#"
                 SELECT id,user_id,message,created_at, 
@@ -286,7 +359,7 @@ impl Group {
             }
         }
     }
-    pub async fn fetch_last_message(&mut self, pool: &web::Data<MySqlPool>){
+    pub async fn fetch_last_message(&mut self, pool: &web::Data<MySqlPool>) {
         match sqlx::query_as!(Message,
             r#"
                 SELECT id,user_id,message,created_at, 
@@ -309,7 +382,7 @@ impl Group {
             }
         }
     }
-    pub async fn get_users(&mut self, pool: &web::Data<MySqlPool>){
+    pub async fn get_users(&mut self, pool: &web::Data<MySqlPool>) {
         match sqlx::query_as!(ProfileData,
             r#"
                 SELECT users.id, users.name, users.email, users.account_type, users.location, users.embed_url, users.image_url, users.avatar_url, users.bio

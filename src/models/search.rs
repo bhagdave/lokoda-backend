@@ -1,5 +1,5 @@
 use actix_web::web;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -18,10 +18,13 @@ pub struct Results {
     avatar_url: Option<String>,
     location: String,
     name: String,
-    genres: Option<serde_json::Value>
+    genres: Option<serde_json::Value>,
 }
 
-pub async fn do_search(form: &web::Json<Search>, pool: &web::Data<MySqlPool>) -> Result<Vec<Results>, sqlx::Error>{
+pub async fn do_search(
+    form: &web::Json<Search>,
+    pool: &web::Data<MySqlPool>,
+) -> Result<Vec<Results>, sqlx::Error> {
     sqlx::query_as!(Results,
         r#"
             SELECT id,account_type,image_url,avatar_url,name, location, json_extract(genres, '$') as genres
@@ -38,4 +41,3 @@ pub async fn do_search(form: &web::Json<Search>, pool: &web::Data<MySqlPool>) ->
     ).fetch_all(pool.get_ref())
     .await
 }
-

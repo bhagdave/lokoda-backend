@@ -3,8 +3,8 @@ use std::convert::{TryFrom, TryInto};
 #[derive(serde::Deserialize)]
 pub struct Settings {
     pub database: DatabaseSettings,
-    pub application : ApplicationSettings,
-    pub email : EmailSettings
+    pub application: ApplicationSettings,
+    pub email: EmailSettings,
 }
 
 #[derive(serde::Deserialize)]
@@ -50,15 +50,14 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     settings.try_into()
 }
 
-
 pub enum Environment {
     Local,
     Production,
 }
 
 impl Environment {
-    pub fn as_str(&self) -> &'static str{
-        match self{
+    pub fn as_str(&self) -> &'static str {
+        match self {
             Environment::Local => "local",
             Environment::Production => "production",
         }

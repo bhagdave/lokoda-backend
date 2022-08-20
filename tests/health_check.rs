@@ -1,14 +1,13 @@
 //! tests/health_check.rs
-use std::net::TcpListener;
-use lokoda_backend::startup::run;
 use lokoda_backend::configuration::*;
+use lokoda_backend::startup::run;
 use sqlx::{Connection, Executor, MySqlConnection, MySqlPool};
+use std::net::TcpListener;
 
 pub struct TestApp {
     pub address: String,
     pub db_pool: MySqlPool,
 }
-
 
 async fn spawn_app() -> TestApp {
     let listener = TcpListener::bind("127.0.0.1:0").expect("Uanble to bind to address");
@@ -32,10 +31,10 @@ pub async fn configure_database(config: &DatabaseSettings) -> MySqlPool {
         .await
         .expect("Failed to connect to MYSQL.");
 
-    connection.execute(r#"CREATE DATABASE testing;"#)
+    connection
+        .execute(r#"CREATE DATABASE testing;"#)
         .await
         .expect("Failed to create database.");
-        
 
     // migrate
     let connection_pool = MySqlPool::connect(&config.connection_string())
@@ -63,5 +62,3 @@ async fn health_check_works() {
     assert!(response.status().is_success());
     assert_eq!(Some(0), response.content_length());
 }
-
-

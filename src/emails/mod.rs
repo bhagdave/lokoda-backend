@@ -1,10 +1,10 @@
-use lettre::smtp::authentication::Credentials;
-use lettre::{ClientSecurity, ClientTlsParameters,  SmtpClient, Transport};
-use native_tls::{Protocol, TlsConnector};
-use lettre_email::EmailBuilder;
 use crate::configuration::*;
+use lettre::smtp::authentication::Credentials;
+use lettre::{ClientSecurity, ClientTlsParameters, SmtpClient, Transport};
+use lettre_email::EmailBuilder;
+use native_tls::{Protocol, TlsConnector};
 
-pub fn send_email(to: &str, from: &str, subject: &str, body: &str){
+pub fn send_email(to: &str, from: &str, subject: &str, body: &str) {
     let configuration = get_configuration().expect("Failed to read configuration.");
     println!("Smtp Host:{}", &configuration.email.host);
     let email = EmailBuilder::new()
@@ -15,23 +15,31 @@ pub fn send_email(to: &str, from: &str, subject: &str, body: &str){
         .build()
         .unwrap();
 
-    let creds = Credentials::new(configuration.email.username.to_string(), configuration.email.password.to_string());
+    let creds = Credentials::new(
+        configuration.email.username.to_string(),
+        configuration.email.password.to_string(),
+    );
     let mut tls_builder = TlsConnector::builder();
     // Disable as many security features as possible ( no luck :( )
     tls_builder.min_protocol_version(Some(Protocol::Sslv3));
     tls_builder.use_sni(false);
     tls_builder.danger_accept_invalid_certs(true);
     tls_builder.danger_accept_invalid_hostnames(true);
-    let tls_parameters =
-        ClientTlsParameters::new(
-            configuration.email.host.to_string(),
-            tls_builder.build().unwrap()
-        );
+    let tls_parameters = ClientTlsParameters::new(
+        configuration.email.host.to_string(),
+        tls_builder.build().unwrap(),
+    );
     // Open a remote connection to gmail
-    let mut mailer = SmtpClient::new((configuration.email.host.to_string(), configuration.email.port), ClientSecurity::Required(tls_parameters))
-        .unwrap()
-        .credentials(creds)
-        .transport();
+    let mut mailer = SmtpClient::new(
+        (
+            configuration.email.host.to_string(),
+            configuration.email.port,
+        ),
+        ClientSecurity::Required(tls_parameters),
+    )
+    .unwrap()
+    .credentials(creds)
+    .transport();
 
     // Send the email
     match mailer.send(email.into()) {
