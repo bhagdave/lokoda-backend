@@ -1,4 +1,5 @@
 use actix_web::web;
+use actix_web::web::{Data, Json};
 use ammonia::clean;
 use bcrypt::*;
 use guid_create::GUID;
@@ -58,6 +59,12 @@ pub struct AddUrl {
 }
 
 #[derive(serde::Deserialize)]
+pub struct SocialLink {
+    pub name: String,
+    pub url: String,
+}
+
+#[derive(serde::Deserialize)]
 pub struct Profile {
     pub id: String,
 }
@@ -91,7 +98,7 @@ pub struct UpdateProfileData {
 }
 
 impl ProfileData {
-    pub async fn get_profile(user_id: &str, pool: &web::Data<MySqlPool>) -> Self {
+    pub async fn get_profile(user_id: &str, pool: &Data<MySqlPool>) -> Self {
         let profile = sqlx::query_as!(
             ProfileData,
             "SELECT id, name, email, account_type, location, embed_url, avatar_url, image_url, bio 
@@ -116,7 +123,7 @@ impl ProfileData {
         }
     }
 
-    pub async fn update_bio(&mut self, bio: &str, pool: &web::Data<MySqlPool>) {
+    pub async fn update_bio(&mut self, bio: &str, pool: &Data<MySqlPool>) {
         self.bio = Some(bio.to_string());
         let _update = sqlx::query!(
             r#"
@@ -133,7 +140,7 @@ impl ProfileData {
 
 pub async fn get_profile_data(
     user: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<ProfileData, sqlx::Error> {
     let profile = ProfileData::get_profile(user, pool).await;
     Ok(profile)
@@ -142,16 +149,34 @@ pub async fn get_profile_data(
 pub async fn update_bio(
     user: &str,
     bio: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<ProfileData, sqlx::Error> {
     let mut profile = ProfileData::get_profile(user, pool).await;
     let safe_content = clean(&bio);
     profile.update_bio(&safe_content, pool).await;
     Ok(profile)
 }
+
+pub async fn add_social_link_to_user(
+    user: &str,
+    social_link: Json<SocialLink>,
+    pool: &Data<MySqlPool>
+) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        INSERT INTO social_links (name, url, user_id)
+        VALUES(?, ?, ?)
+        "#,
+        social_link.name,
+        social_link.url,
+        user
+    )
+        .execute(pool.get_ref())
+        .await
+}
 pub async fn get_login_data(
     email: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<LoginData, sqlx::Error> {
     // get user from database table
     let user_record = sqlx::query_as!(
@@ -170,7 +195,7 @@ pub async fn get_login_data(
 }
 pub async fn set_remember_token(
     email: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     let guid = GUID::rand();
     log::info!("Found user and creating guid of {}", guid.to_string());
@@ -187,8 +212,8 @@ pub async fn set_remember_token(
     update
 }
 pub async fn get_simple_user(
-    form: &web::Json<UpdatePassword>,
-    pool: &web::Data<MySqlPool>,
+    form: &Json<UpdatePassword>,
+    pool: &Data<MySqlPool>,
 ) -> Result<SimpleUser, sqlx::Error> {
     let user_record = sqlx::query_as!(
         SimpleUser,
@@ -209,7 +234,7 @@ pub async fn get_simple_user(
 pub async fn update_user_password(
     password: &str,
     id: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -224,7 +249,7 @@ pub async fn update_user_password(
 }
 pub async fn create_session_token(
     id: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<String, sqlx::Error> {
     let existing_token = sqlx::query!(
         r#"
@@ -263,7 +288,7 @@ pub async fn create_session_token(
 }
 pub async fn check_session_token(
     token: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<String, sqlx::Error> {
     let result = sqlx::query!(
         r#"
@@ -282,8 +307,8 @@ pub async fn check_session_token(
     }
 }
 pub async fn register_new_user(
-    form: &web::Json<UserData>,
-    pool: &web::Data<MySqlPool>,
+    form: &Json<UserData>,
+    pool: &Data<MySqlPool>,
     pwdhash: &str,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
@@ -302,8 +327,8 @@ pub async fn register_new_user(
 }
 pub async fn add_embed_url_to_user(
     user: &str,
-    url: &web::Json<AddUrl>,
-    pool: &web::Data<MySqlPool>,
+    url: &Json<AddUrl>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -318,7 +343,7 @@ pub async fn add_embed_url_to_user(
 }
 pub async fn delete_embed_url_from_user(
     user: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -332,8 +357,8 @@ pub async fn delete_embed_url_from_user(
 }
 pub async fn add_avatar_url_to_user(
     user: &str,
-    url: &web::Json<AddUrl>,
-    pool: &web::Data<MySqlPool>,
+    url: &Json<AddUrl>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -348,7 +373,7 @@ pub async fn add_avatar_url_to_user(
 }
 pub async fn delete_avatar_url_from_user(
     user: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -362,8 +387,8 @@ pub async fn delete_avatar_url_from_user(
 }
 pub async fn add_image_url_to_user(
     user: &str,
-    url: &web::Json<AddUrl>,
-    pool: &web::Data<MySqlPool>,
+    url: &Json<AddUrl>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -378,7 +403,7 @@ pub async fn add_image_url_to_user(
 }
 pub async fn delete_image_url_from_user(
     user: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -392,8 +417,8 @@ pub async fn delete_image_url_from_user(
 }
 pub async fn update_profile(
     user: &str,
-    profile: &web::Json<UpdateProfileData>,
-    pool: &web::Data<MySqlPool>,
+    profile: &Json<UpdateProfileData>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -412,10 +437,10 @@ pub async fn update_profile(
 }
 pub async fn change_password_for_user(
     user: &str,
-    password: &web::Json<PasswordUpdate>,
-    pool: &web::Data<MySqlPool>,
+    password: &Json<PasswordUpdate>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
-    let password_hash = match hash(&password.password, bcrypt::DEFAULT_COST) {
+    let password_hash = match hash(&password.password, DEFAULT_COST) {
         Ok(hashed_password) => hashed_password,
         Err(_e) => {
             log::error!("Failed to encrypt password");
@@ -433,7 +458,7 @@ pub async fn change_password_for_user(
     .execute(pool.get_ref())
     .await
 }
-pub async fn get_user(user: &str, pool: &web::Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
+pub async fn get_user(user: &str, pool: &Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
     let user = sqlx::query_as!(
         LoginData,
         r#"
@@ -450,7 +475,7 @@ pub async fn get_user(user: &str, pool: &web::Data<MySqlPool>) -> Result<LoginDa
 }
 pub async fn delete_user_account(
     user: &str,
-    pool: &web::Data<MySqlPool>,
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"

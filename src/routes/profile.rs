@@ -191,7 +191,7 @@ pub async fn get_shows_for_profile(
     pool: web::Data<MySqlPool>,
 ) -> HttpResponse {
     // Need to know the user id.
-    match crate::models::shows::get_user_shows(&user_id, &pool).await {
+    match get_user_shows(&user_id, &pool).await {
         Ok(records) => HttpResponse::Ok().json(records),
         Err(_) => HttpResponse::Ok().json("Unable to obtain shows"),
     }
@@ -413,6 +413,27 @@ pub async fn delete_account(session: Session, pool: web::Data<MySqlPool>) -> Htt
                 Ok(user) => match delete_user_account(&user, &pool).await {
                     Ok(_) => HttpResponse::Ok().json("Account Deleted"),
                     Err(_) => HttpResponse::Ok().json("Unable to delete account"),
+                },
+                Err(_) => HttpResponse::Ok().json("not logged_in"),
+            }
+        }
+        Ok(None) => HttpResponse::Ok().json("No Session"),
+        Err(_) => HttpResponse::Ok().json("Error"),
+    }
+}
+pub async fn social_link(
+    session: Session,
+    social_link: web::Json<SocialLink>,
+    pool: web::Data<MySqlPool>,
+) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => match add_social_link_to_user(&user, social_link, &pool).await {
+                    Ok(_) => HttpResponse::Ok().json("Social Link added"),
+                    Err(_) => HttpResponse::Ok().json("Unable to social link url"),
                 },
                 Err(_) => HttpResponse::Ok().json("not logged_in"),
             }
