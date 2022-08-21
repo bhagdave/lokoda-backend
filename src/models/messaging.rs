@@ -319,7 +319,18 @@ impl Group {
             self.id
         )
         .execute(pool.get_ref())
-        .await
+        .await?;
+        sqlx::query!(
+            r#"
+            UPDATE `user_groups` SET unread = unread + 1
+            WHERE group_id = ?
+            AND user_id != ?
+            "#,
+            self.id,
+            user_id
+        )
+            .execute(pool.get_ref())
+            .await
     }
     pub async fn add_new_user(
         &self,
