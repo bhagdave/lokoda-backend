@@ -176,6 +176,16 @@ pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> Ht
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+pub async fn get_social(
+    user_id: web::Path<String>,
+    pool: web::Data<MySqlPool>,
+) -> HttpResponse {
+    // Need to know the user id.
+    match get_social_links(&user_id, &pool).await {
+        Ok(records) => HttpResponse::Ok().json(records),
+        Err(_) => HttpResponse::Ok().json("Unable to obtain shows"),
+    }
+}
 pub async fn get_genres_for_profile(
     user_id: web::Path<String>,
     pool: web::Data<MySqlPool>,

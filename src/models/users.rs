@@ -58,7 +58,7 @@ pub struct AddUrl {
     pub url: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Serialize)]
 pub struct SocialLink {
     pub name: String,
     pub url: String,
@@ -156,7 +156,24 @@ pub async fn update_bio(
     profile.update_bio(&safe_content, pool).await;
     Ok(profile)
 }
-
+pub async fn get_social_links(
+    user: &str,
+    pool: &Data<MySqlPool>
+) -> Result<Vec<SocialLink>, sqlx::Error>
+{
+    sqlx::query_as!(
+        SocialLink,
+        r#"
+        SELECT name, url
+        FROM social_links
+        WHERE
+            user_id = ?
+        "#,
+        user
+    )
+        .fetch_all(pool.get_ref())
+        .await
+}
 pub async fn add_social_link_to_user(
     user: &str,
     social_link: Json<SocialLink>,
