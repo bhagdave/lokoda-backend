@@ -140,10 +140,11 @@ pub async fn get_users_groups(
     rows.sort_by(|a, b| b.last_message.cmp(&a.last_message));
     Ok(rows)
 }
-pub async fn get_group(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
+pub async fn get_group(group_id: &str, user: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
     let mut group = Group::get_group(group_id, pool).await;
     group.fetch_messages(pool).await;
     group.get_users(&pool).await;
+    group.mark_read(&user, &pool).await;
     Ok(group)
 }
 pub async fn fetch_contacts(
@@ -393,6 +394,26 @@ impl Group {
             }
         }
     }
+    pub async fn mark_read(&self, user : &str, pool: &web::Data<MySqlPool>) {
+        let update = sqlx::query!(
+            r#"
+            UPDATE `user_groups` SET unread = 0
+            WHERE group_id = ? AND user_id = ?
+            "#,
+            self.id,
+            user,
+        )
+        .execute(pool.get_ref())
+        .await;
+        match update {
+            Ok(_) => {
+                log::info!("Cleared group:{} for user:{}", self.id,&user);
+            }
+            Err(_) => {
+                log::error!("Error Cleared group:{} for user:{}", self.id,&user);
+            }
+        }
+    }
     pub async fn get_users(&mut self, pool: &web::Data<MySqlPool>) {
         match sqlx::query_as!(ProfileData,
             r#"
@@ -404,7 +425,7 @@ impl Group {
         ).fetch_all(pool.get_ref())
         .await {
             Ok(users) => {
-                    self.users = Some(users);
+                self.users = Some(users);
             }
             Err(_) => {
                 self.users = None

@@ -309,7 +309,7 @@ pub async fn get_group(
         Ok(Some(token)) => {
             let userid = check_session_token(&token, &pool).await;
             match userid {
-                Ok(_user) => match messaging::get_group(&group_id, &pool).await {
+                Ok(user) => match messaging::get_group(&group_id, &user, &pool).await {
                     Ok(group) => HttpResponse::Ok().json(group),
                     Err(e) => {
                         log::error!("Whoops: {:?}", e);
