@@ -251,6 +251,30 @@ pub async fn leave_group(
     .await
 }
 
+pub async fn unread_messages(
+    user: &str,
+    pool: &web::Data<MySqlPool>,
+) -> i64 {
+    let record = sqlx::query!(
+        r#"
+        SELECT CAST(SUM(unread) AS SIGNED) unread
+        FROM user_groups
+        WHERE user_id = ?
+        "#,
+        user,
+    )
+    .fetch_one(pool.get_ref())
+    .await;
+    match record {
+        Ok(record) => {
+            record.unread.unwrap()
+        }
+        Err(_) => {
+            0
+        }
+    }
+}
+
 impl Group {
     pub async fn get_group(group_id: &str, pool: &web::Data<MySqlPool>) -> Self {
         let group = sqlx::query!("SELECT name FROM `groups` WHERE id = ?", group_id)

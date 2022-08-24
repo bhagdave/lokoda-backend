@@ -65,6 +65,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
             .route("/delete_contacts", web::post().to(delete_contacts))
             .route("/create_group", web::post().to(create_group))
             .route("/leave_group/{group_id}", web::get().to(leave_group))
+            .route("/unread_messages", web::get().to(unread_messages))
             .app_data(db_pool.clone())
     })
     .listen(listener)?
