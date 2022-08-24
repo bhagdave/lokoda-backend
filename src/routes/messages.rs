@@ -309,7 +309,7 @@ pub async fn get_group(
         Ok(Some(token)) => {
             let userid = check_session_token(&token, &pool).await;
             match userid {
-                Ok(_user) => match messaging::get_group(&group_id, &pool).await {
+                Ok(user) => match messaging::get_group(&group_id, &user, &pool).await {
                     Ok(group) => HttpResponse::Ok().json(group),
                     Err(e) => {
                         log::error!("Whoops: {:?}", e);
@@ -359,3 +359,24 @@ pub async fn create_group(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+pub async fn unread_messages(
+    session: Session,
+    pool: web::Data<MySqlPool>,
+) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    let unread = messaging::unread_messages(&user, &pool).await;
+                    HttpResponse::Ok().json(unread)
+                }
+                Err(_) => HttpResponse::Ok().json("not logged_in"),
+            }
+        }
+        Ok(None) => HttpResponse::Ok().json("No Session"),
+        Err(_) => HttpResponse::Ok().json("Error"),
+    }
+}
+
