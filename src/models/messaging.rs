@@ -30,6 +30,7 @@ pub struct Group {
     messages: Option<Vec<Message>>,
     users: Option<Vec<ProfileData>>,
     last_message: Option<NaiveDateTime>,
+    unread: Option<i32>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -104,7 +105,8 @@ pub async fn get_users_groups(
         r#"
             SELECT 
                 groups.id, 
-                groups.name
+                groups.name,
+                user_groups.unread
             FROM 
                 `groups` 
             JOIN user_groups ON group_id = groups.id AND user_id = ?
@@ -112,13 +114,14 @@ pub async fn get_users_groups(
         user
     )
     .map(|row| {
-        (Group {
+        Group {
             id: row.id,
             name: row.name,
             messages: None,
             users: None,
             last_message: None,
-        })
+            unread: row.unread,
+        }
     })
     .fetch_all(pool.get_ref())
     .await?;
@@ -287,6 +290,7 @@ impl Group {
                 messages: None,
                 users: None,
                 last_message: None,
+                unread: Some(0),
             },
             Err(_) => Self {
                 id: group_id.to_string(),
@@ -294,6 +298,7 @@ impl Group {
                 messages: None,
                 users: None,
                 last_message: None,
+                unread: Some(0),
             },
         }
     }
@@ -317,6 +322,7 @@ impl Group {
             messages: None,
             users: None,
             last_message: None,
+            unread: Some(0),
         }
     }
     pub async fn add_new_message(
