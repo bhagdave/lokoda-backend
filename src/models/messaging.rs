@@ -27,7 +27,7 @@ pub struct ContactList {
 pub struct Group {
     id: String,
     name: String,
-    messages: Option<Vec<Message>>,
+    pub messages: Option<Vec<Message>>,
     users: Option<Vec<ProfileData>>,
     last_message: Option<NaiveDateTime>,
     unread: Option<i32>,
@@ -254,6 +254,23 @@ pub async fn leave_group(
     .await
 }
 
+pub async fn join_group(
+    user: &str,
+    group: &str,
+    pool: &web::Data<MySqlPool>,
+) -> Result<MySqlQueryResult, sqlx::Error> {
+    sqlx::query!(
+        r#"
+        INSERT INTO `user_groups`
+        (user_id, group_id)
+        VALUES(?, ?)
+        "#,
+        user,
+        group,
+    )
+        .execute(pool.get_ref())
+        .await
+}
 pub async fn unread_messages(
     user: &str,
     pool: &web::Data<MySqlPool>,
@@ -276,6 +293,11 @@ pub async fn unread_messages(
             0
         }
     }
+}
+pub async fn get_messages(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
+    let mut group = Group::get_group(group_id, pool).await;
+    group.fetch_messages(pool).await;
+    Ok(group)
 }
 
 impl Group {

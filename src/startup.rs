@@ -68,7 +68,10 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
                     .route("{id}", web::get().to(get_group))
                     .route("/", web::get().to(get_groups))
                     .route("{id}/leave", web::get().to(leave_group))
-                    .route("{id}/message", web::post().to(new_message))
+                    .route("{id}/join", web::get().to(join_group))
+                    .route("{id}/messages", web::post().to(new_message))
+                    .route("{id}/messages", web::get().to(get_messages))
+                    .route("{id}/users", web::get().to(new_message))
             )
     })
     .listen(listener)?
