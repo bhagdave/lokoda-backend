@@ -71,7 +71,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
                     .route("{id}/join", web::get().to(join_group))
                     .route("{id}/messages", web::post().to(new_message))
                     .route("{id}/messages", web::get().to(get_messages))
-                    .route("{id}/users", web::get().to(new_message))
+                    .route("{id}/users", web::get().to(get_users))
             )
     })
     .listen(listener)?

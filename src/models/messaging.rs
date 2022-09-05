@@ -28,7 +28,7 @@ pub struct Group {
     id: String,
     name: String,
     pub messages: Option<Vec<Message>>,
-    users: Option<Vec<ProfileData>>,
+    pub users: Option<Vec<ProfileData>>,
     last_message: Option<NaiveDateTime>,
     unread: Option<i32>,
 }
@@ -297,6 +297,12 @@ pub async fn unread_messages(
 pub async fn get_messages(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
     let mut group = Group::get_group(group_id, pool).await;
     group.fetch_messages(pool).await;
+    Ok(group)
+}
+
+pub async fn get_users(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
+    let mut group = Group::get_group(group_id, pool).await;
+    group.get_users(pool).await;
     Ok(group)
 }
 
