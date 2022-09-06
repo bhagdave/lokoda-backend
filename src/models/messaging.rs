@@ -77,7 +77,8 @@ pub async fn get_groups(
                 `groups` 
                 JOIN user_groups ON 
                     user_groups.group_id =`groups`.id 
-                    AND user_id = ? 
+                    AND user_id = ?
+                    AND `left` = 0
                 LEFT JOIN 
                     (SELECT group_id, message FROM messages LIMIT 1 ) x 
                     ON x.group_id = user_groups.group_id
