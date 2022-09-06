@@ -484,6 +484,23 @@ impl Group {
     pub async fn mark_read(&self, user : &str, pool: &web::Data<MySqlPool>) {
         let update = sqlx::query!(
             r#"
+            UPDATE `user_messages`
+            SET `read` = 1, `read_at` = now()
+            WHERE group_id =? AND user_id = ?
+            "#,
+            self.id,
+            user
+        ).execute(pool.get_ref()).await;
+        match update {
+            Ok(_) => {
+                log::info!("Cleared group:{} for user:{}", self.id,&user);
+            }
+            Err(_) => {
+                log::error!("Error Cleared group:{} for user:{}", self.id,&user);
+            }
+        }
+        let update = sqlx::query!(
+            r#"
             UPDATE `user_groups` SET unread = 0
             WHERE group_id = ? AND user_id = ?
             "#,
