@@ -60,7 +60,7 @@ pub struct NewMessage {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewGroup {
     name: String,
-    users: Vec<String>,
+    pub users: Vec<String>,
 }
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
@@ -228,7 +228,21 @@ pub async fn create_group(
     new_group: web::Json<NewGroup>,
     pool: &web::Data<MySqlPool>,
 ) -> Result<Group, sqlx::Error> {
-    let mut group = Group::new_group(&new_group.name, &pool).await;
+    let mut group = Group::new_group(&new_group.name,false, &pool).await;
+    group.add_new_user(&user, &pool).await?;
+    for user_id in &new_group.users {
+        group.add_new_user(&user_id, &pool).await?;
+    }
+    group.get_users(&pool).await;
+
+    Ok(group)
+}
+pub async fn create_chat(
+    user: &str,
+    new_group: web::Json<NewGroup>,
+    pool: &web::Data<MySqlPool>,
+) -> Result<Group, sqlx::Error> {
+    let mut group = Group::new_group(&new_group.name,true, &pool).await;
     group.add_new_user(&user, &pool).await?;
     for user_id in &new_group.users {
         group.add_new_user(&user_id, &pool).await?;
@@ -332,15 +346,16 @@ impl Group {
             },
         }
     }
-    pub async fn new_group(name: &str, pool: &web::Data<MySqlPool>) -> Self {
+    pub async fn new_group(name: &str, chat: bool, pool: &web::Data<MySqlPool>) -> Self {
         let guid = GUID::rand();
         sqlx::query!(
             r#"
-            INSERT INTO `groups` (id, name)
-            VALUES(?, ?)
+            INSERT INTO `groups` (id, name, chat)
+            VALUES(?, ?, ?)
             "#,
             guid.to_string(),
             name,
+            chat,
         )
         .execute(pool.get_ref())
         .await

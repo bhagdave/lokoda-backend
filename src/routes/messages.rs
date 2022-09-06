@@ -359,6 +359,36 @@ pub async fn create_group(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+pub async fn create_chat(
+    session: Session,
+    new_group: web::Json<NewGroup>,
+    pool: web::Data<MySqlPool>,
+) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    if new_group.users.len() > 1 {
+                        return HttpResponse::Ok().json("Only one user allowed in chat with you")
+                    }
+                    let group = messaging::create_chat(&user, new_group, &pool).await;
+                    match group {
+                        Ok(group) => HttpResponse::Ok().json(group),
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
+                Err(_) => HttpResponse::Ok().json("not logged_in"),
+            }
+        }
+        Ok(None) => HttpResponse::Ok().json("No Session"),
+        Err(_) => HttpResponse::Ok().json("Error"),
+    }
+}
 pub async fn unread_messages(
     session: Session,
     pool: web::Data<MySqlPool>,
