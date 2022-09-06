@@ -359,11 +359,13 @@ impl Group {
         message: &str,
         pool: &web::Data<MySqlPool>,
     ) -> Result<MySqlQueryResult, sqlx::Error> {
+        let guid = GUID::rand();
         sqlx::query!(
             r#"
-            INSERT INTO `messages` (group_id, user_id, message, created_at)
-            VALUES(?, ?, ?, NOW())
+            INSERT INTO `messages` (id, group_id, user_id, message, created_at)
+            VALUES(?, ?, ?, ?, NOW())
             "#,
+            guid.to_string(),
             self.id,
             user_id,
             message,
@@ -379,6 +381,16 @@ impl Group {
         )
         .execute(pool.get_ref())
         .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO user_messages
+            (user_id, message_id)
+            SELECT user_id, ? FROM user_groups
+            WHERE group_id = ?
+            "#,
+            guid.to_string(),
+            self.id
+        ).execute(pool.get_ref()).await?;
         sqlx::query!(
             r#"
             UPDATE `user_groups` SET unread = unread + 1
