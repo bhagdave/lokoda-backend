@@ -31,6 +31,7 @@ pub struct Group {
     pub users: Option<Vec<ProfileData>>,
     last_message: Option<NaiveDateTime>,
     unread: Option<i32>,
+    chat: Option<i8>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -94,6 +95,7 @@ pub async fn new_message(
     pool: &web::Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     let group = Group::get_group(&new_message.group_id, pool).await;
+    // TODO::Check if a chat and that the other user in thr geoup is not a blocked contact
     group
         .add_new_message(&user, &new_message.message, pool)
         .await
@@ -122,6 +124,7 @@ pub async fn get_users_groups(
             users: None,
             last_message: None,
             unread: row.unread,
+            chat: None,
         }
     })
     .fetch_all(pool.get_ref())
@@ -324,7 +327,7 @@ pub async fn get_users(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Gr
 
 impl Group {
     pub async fn get_group(group_id: &str, pool: &web::Data<MySqlPool>) -> Self {
-        let group = sqlx::query!("SELECT name FROM `groups` WHERE id = ?", group_id)
+        let group = sqlx::query!("SELECT name,chat,last_message FROM `groups` WHERE id = ?", group_id)
             .fetch_one(pool.get_ref())
             .await;
         match group {
@@ -333,8 +336,9 @@ impl Group {
                 name: group.name,
                 messages: None,
                 users: None,
-                last_message: None,
+                last_message: group.last_message,
                 unread: Some(0),
+                chat: group.chat,
             },
             Err(_) => Self {
                 id: group_id.to_string(),
@@ -343,6 +347,7 @@ impl Group {
                 users: None,
                 last_message: None,
                 unread: Some(0),
+                chat: None,
             },
         }
     }
@@ -368,6 +373,7 @@ impl Group {
             users: None,
             last_message: None,
             unread: Some(0),
+            chat: Some(chat as i8),
         }
     }
     pub async fn add_new_message(
@@ -377,6 +383,16 @@ impl Group {
         pool: &web::Data<MySqlPool>,
     ) -> Result<MySqlQueryResult, sqlx::Error> {
         let guid = GUID::rand();
+        sqlx::query!(
+            r#"
+            UPDATE `user_groups` SET  `left` = 0
+            WHERE group_id = ?
+            AND `chat` = 1
+            "#,
+            self.id,
+        )
+            .execute(pool.get_ref())
+            .await?;
         sqlx::query!(
             r#"
             INSERT INTO `messages` (id, group_id, user_id, message, created_at)
