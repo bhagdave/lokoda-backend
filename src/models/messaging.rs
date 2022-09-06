@@ -243,7 +243,8 @@ pub async fn leave_group(
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
-        DELETE FROM `user_groups` 
+        UPDATE `user_groups`
+        SET `left` = 1, `left_on` = now()
         WHERE user_id = ?
         AND group_id = ?
         "#,
