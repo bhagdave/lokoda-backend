@@ -8,6 +8,7 @@ use sqlx::MySqlPool;
 
 use futures::stream::futures_unordered::FuturesUnordered;
 use futures::stream::StreamExt;
+use log::error;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Contact {
@@ -94,8 +95,28 @@ pub async fn new_message(
     new_message: &web::Json<NewMessage>,
     pool: &web::Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
-    let group = Group::get_group(&new_message.group_id, pool).await;
-    // TODO::Check if a chat and that the other user in thr geoup is not a blocked contact
+    let mut group = Group::get_group(&new_message.group_id, pool).await;
+    // TODO::Check if a chat and that the other user in thr geoup is not a blocked contact/
+    if group.chat.unwrap() == 1 {
+        log::info!("We have a chat");
+        group.get_users(&pool).await;
+        match &group.users {
+            Some(users) => {
+                for (_pos, e) in users.iter().enumerate() {
+                    if e.id != user {
+                        // check blocked contacts mate
+                        let blocked = Group::check_blocked(user, &e.id, pool).await;
+                        if blocked {
+                            return group.add_new_message(&user, "BLOCKED", pool).await;
+                        }
+                    }
+                }
+            }
+            None => {
+                log::error!("No users in group")
+            }
+        }
+    }
     group
         .add_new_message(&user, &new_message.message, pool)
         .await
@@ -351,6 +372,7 @@ impl Group {
             },
         }
     }
+
     pub async fn new_group(name: &str, chat: bool, pool: &web::Data<MySqlPool>) -> Self {
         let guid = GUID::rand();
         sqlx::query!(
@@ -374,6 +396,20 @@ impl Group {
             last_message: None,
             unread: Some(0),
             chat: Some(chat as i8),
+        }
+    }
+    async fn check_blocked(user: &str, contact: &str, pool: &web::Data<MySqlPool>) -> bool {
+        match sqlx::query!(
+            r#"
+            SELECT * FROM contacts WHERE user_id = ? and contact_id = ? AND blocked = 1
+            "#,
+            user,
+            contact
+        ).fetch_one(pool.get_ref())
+            .await
+        {
+            Ok(_blocked) => true,
+            Err(_e) => false
         }
     }
     pub async fn add_new_message(
@@ -539,7 +575,7 @@ impl Group {
             r#"
                 SELECT users.id, users.name, users.email, users.account_type, users.location, users.embed_url, users.image_url, users.avatar_url, users.bio
                 FROM users
-                JOIN user_groups ON user_groups.user_id = users.id AND group_id = ?
+                JOIN user_groups ON user_groups.user_id = users.id AND group_id = ? AND `user_groups`.`left` = 0
             "#,
             self.id,
         ).fetch_all(pool.get_ref())
