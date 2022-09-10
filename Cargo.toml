@@ -1,8 +1,8 @@
 [package]
 name = "lokoda_backend"
-version = "0.2.5"
+version = "0.3.0"
 authors = ["Dave Gill <david.g.h.gill@protonmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

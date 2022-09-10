@@ -113,7 +113,7 @@ pub async fn new_contact(
         Ok(Some(token)) => {
             let userid = check_session_token(&token, &pool).await;
             match userid {
-                Ok(user) => match messaging::add_contact(&user, &contact_id, &pool).await {
+                Ok(user) => match add_contact(&user, &contact_id, &pool).await {
                     Ok(_) => HttpResponse::Ok().json("Contact added"),
                     Err(e) => {
                         log::error!("Whoops: {:?}", e);
@@ -276,7 +276,7 @@ pub async fn get_groups(session: Session, pool: web::Data<MySqlPool>) -> HttpRes
         Ok(Some(token)) => {
             let userid = check_session_token(&token, &pool).await;
             match userid {
-                Ok(user) => match messaging::get_users_groups(&user, &pool).await {
+                Ok(user) => match get_users_groups(&user, &pool).await {
                     Ok(groups) => HttpResponse::Ok().json(groups),
                     Err(e) => {
                         log::error!("Whoops: {:?}", e);
@@ -359,6 +359,36 @@ pub async fn create_group(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+pub async fn create_chat(
+    session: Session,
+    new_group: web::Json<NewGroup>,
+    pool: web::Data<MySqlPool>,
+) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    if new_group.users.len() > 1 {
+                        return HttpResponse::Ok().json("Only one user allowed in chat with you")
+                    }
+                    let group = messaging::create_chat(&user, new_group, &pool).await;
+                    match group {
+                        Ok(group) => HttpResponse::Ok().json(group),
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
+                Err(_) => HttpResponse::Ok().json("not logged_in"),
+            }
+        }
+        Ok(None) => HttpResponse::Ok().json("No Session"),
+        Err(_) => HttpResponse::Ok().json("Error"),
+    }
+}
 pub async fn unread_messages(
     session: Session,
     pool: web::Data<MySqlPool>,
@@ -380,3 +410,85 @@ pub async fn unread_messages(
     }
 }
 
+pub async fn get_messages(
+    group_id: web::Path<String>,
+    session: Session,
+    pool: web::Data<MySqlPool>,
+) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(_user) => {
+                    let group = messaging::get_messages(&group_id,   &pool).await;
+                    match group {
+                        Ok(group) => HttpResponse::Ok().json(group.messages),
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
+                Err(_) => HttpResponse::Ok().json("not logged_in"),
+            }
+        }
+        Ok(None) => HttpResponse::Ok().json("No Session"),
+        Err(_) => HttpResponse::Ok().json("Error"),
+    }
+}
+pub async fn get_users(
+    group_id: web::Path<String>,
+    session: Session,
+    pool: web::Data<MySqlPool>,
+) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(_user) => {
+                    let group = messaging::get_messages(&group_id, &pool).await;
+                    match group {
+                        Ok(group) => HttpResponse::Ok().json(group.users),
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
+                Err(_) => HttpResponse::Ok().json("not logged_in"),
+            }
+        }
+        Ok(None) => HttpResponse::Ok().json("No Session"),
+        Err(_) => HttpResponse::Ok().json("Error"),
+    }
+}
+
+pub async fn join_group(
+    group_id: web::Path<String>,
+    session: Session,
+    pool: web::Data<MySqlPool>,
+) -> HttpResponse {
+    let logged_in = session.get::<String>("tk");
+    match logged_in {
+        Ok(Some(token)) => {
+            let userid = check_session_token(&token, &pool).await;
+            match userid {
+                Ok(user) => {
+                    let group = messaging::join_group(&user, &group_id, &pool).await;
+                    match group {
+                        Ok(_group) => HttpResponse::Ok().json("Group joined"),
+                        Err(e) => {
+                            log::error!("Failed to execute query: {:?}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
+                Err(_) => HttpResponse::Ok().json("not logged_in"),
+            }
+        }
+        Ok(None) => HttpResponse::Ok().json("No Session"),
+        Err(_) => HttpResponse::Ok().json("Error"),
+    }
+}
