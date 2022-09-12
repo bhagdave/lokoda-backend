@@ -158,9 +158,8 @@ pub async fn update_bio(
 }
 pub async fn get_social_links(
     user: &str,
-    pool: &Data<MySqlPool>
-) -> Result<Vec<SocialLink>, sqlx::Error>
-{
+    pool: &Data<MySqlPool>,
+) -> Result<Vec<SocialLink>, sqlx::Error> {
     sqlx::query_as!(
         SocialLink,
         r#"
@@ -171,13 +170,13 @@ pub async fn get_social_links(
         "#,
         user
     )
-        .fetch_all(pool.get_ref())
-        .await
+    .fetch_all(pool.get_ref())
+    .await
 }
 pub async fn add_social_link_to_user(
     user: &str,
     social_link: Json<SocialLink>,
-    pool: &Data<MySqlPool>
+    pool: &Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -188,13 +187,10 @@ pub async fn add_social_link_to_user(
         social_link.url,
         user
     )
-        .execute(pool.get_ref())
-        .await
+    .execute(pool.get_ref())
+    .await
 }
-pub async fn get_login_data(
-    email: &str,
-    pool: &Data<MySqlPool>,
-) -> Result<LoginData, sqlx::Error> {
+pub async fn get_login_data(email: &str, pool: &Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
     // get user from database table
     let user_record = sqlx::query_as!(
         LoginData,
@@ -264,10 +260,7 @@ pub async fn update_user_password(
     .execute(pool.get_ref())
     .await
 }
-pub async fn create_session_token(
-    id: &str,
-    pool: &Data<MySqlPool>,
-) -> Result<String, sqlx::Error> {
+pub async fn create_session_token(id: &str, pool: &Data<MySqlPool>) -> Result<String, sqlx::Error> {
     let existing_token = sqlx::query!(
         r#"
         SELECT token FROM sessions
