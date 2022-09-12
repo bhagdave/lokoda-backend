@@ -15,13 +15,20 @@ pub async fn new_message(
             let userid = check_session_token(&token, &pool).await;
             match userid {
                 Ok(user) => {
-                    let added = messaging::new_message(&user, &new_message, &pool).await;
-                    match added {
-                        Ok(_) => HttpResponse::Ok().json("Message added"),
-                        Err(e) => {
-                            log::error!("Failed to execute query: {:?}", e);
-                            HttpResponse::InternalServerError().finish()
+                    let allowed = check_user_is_in_group(&user, &new_message, &pool);
+                    if allowed.await {
+                        let added = messaging::new_message(&user, &new_message, &pool).await;
+                        match added {
+                            Ok(_) => {
+                                return HttpResponse::Ok().json("Message added");
+                            },
+                            Err(e) => {
+                                log::error!("Failed to execute query: {:?}", e);
+                                return HttpResponse::InternalServerError().finish();
+                            }
                         }
+                    } else {
+                        HttpResponse::Ok().json("You cannot access this group")
                     }
                 }
                 Err(_) => HttpResponse::Ok().json("not logged_in"),
