@@ -176,10 +176,7 @@ pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> Ht
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
-pub async fn get_social(
-    user_id: web::Path<String>,
-    pool: web::Data<MySqlPool>,
-) -> HttpResponse {
+pub async fn get_social(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse {
     // Need to know the user id.
     match get_social_links(&user_id, &pool).await {
         Ok(records) => HttpResponse::Ok().json(records),

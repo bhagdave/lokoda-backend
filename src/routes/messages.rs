@@ -21,7 +21,7 @@ pub async fn new_message(
                         match added {
                             Ok(_) => {
                                 return HttpResponse::Ok().json("Message added");
-                            },
+                            }
                             Err(e) => {
                                 log::error!("Failed to execute query: {:?}", e);
                                 return HttpResponse::InternalServerError().finish();
@@ -378,7 +378,7 @@ pub async fn create_chat(
             match userid {
                 Ok(user) => {
                     if new_group.users.len() > 1 {
-                        return HttpResponse::Ok().json("Only one user allowed in chat with you")
+                        return HttpResponse::Ok().json("Only one user allowed in chat with you");
                     }
                     let group = messaging::create_chat(&user, new_group, &pool).await;
                     match group {
@@ -396,10 +396,7 @@ pub async fn create_chat(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
-pub async fn unread_messages(
-    session: Session,
-    pool: web::Data<MySqlPool>,
-) -> HttpResponse {
+pub async fn unread_messages(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
         Ok(Some(token)) => {
@@ -428,7 +425,7 @@ pub async fn get_messages(
             let userid = check_session_token(&token, &pool).await;
             match userid {
                 Ok(_user) => {
-                    let group = messaging::get_messages(&group_id,   &pool).await;
+                    let group = messaging::get_messages(&group_id, &pool).await;
                     match group {
                         Ok(group) => HttpResponse::Ok().json(group.messages),
                         Err(e) => {
