@@ -423,9 +423,10 @@ impl Group {
             r#"
             UPDATE `user_groups` SET  `left` = 0
             WHERE group_id = ?
-            AND `chat` = 1
+            AND user_id = ?
             "#,
             self.id,
+            user_id,
         )
             .execute(pool.get_ref())
             .await?;
