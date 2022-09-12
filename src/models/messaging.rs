@@ -334,6 +334,20 @@ pub async fn unread_messages(
         }
     }
 }
+pub async fn check_user_is_in_group(user: &str, new_message: &web::Json<NewMessage>, pool: &web::Data<MySqlPool>) -> bool {
+    match sqlx::query!(
+            r#"
+            SELECT * FROM user_groups WHERE user_id = ? and group_id = ? AND `left` = 0
+            "#,
+            user,
+            new_message.group_id
+        ).fetch_one(pool.get_ref())
+        .await
+    {
+        Ok(_blocked) => true,
+        Err(_e) => false
+    }
+}
 pub async fn get_messages(group_id: &str, pool: &web::Data<MySqlPool>) -> Result<Group, sqlx::Error> {
     let mut group = Group::get_group(group_id, pool).await;
     group.fetch_messages(pool).await;
