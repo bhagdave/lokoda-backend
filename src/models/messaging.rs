@@ -475,8 +475,8 @@ impl Group {
         sqlx::query!(
             r#"
             INSERT INTO user_messages
-            (user_id, message_id)
-            SELECT user_id, ? FROM user_groups
+            (user_id, group_id, message_id)
+            SELECT user_id, group_id, ? FROM user_groups
             WHERE group_id = ?
             "#,
             guid.to_string(),
