@@ -318,7 +318,7 @@ pub async fn unread_messages(user: &str, pool: &web::Data<MySqlPool>) -> i64 {
         r#"
         SELECT CAST(SUM(unread) AS SIGNED) unread
         FROM user_groups
-        WHERE user_id = ?
+        WHERE user_id = ? AND `left` = 0
         "#,
         user,
     )
