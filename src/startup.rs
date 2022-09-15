@@ -78,6 +78,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
                 web::scope("chat")
                     .route("/chat", web::post().to(create_chat))
                     .route("{id}", web::get().to(get_group))
+                    .route("{id}/leave", web::get().to(leave_group))
                     .route("{id}/messages", web::post().to(new_message))
                     .route("{id}/messages", web::get().to(get_messages)),
             )
