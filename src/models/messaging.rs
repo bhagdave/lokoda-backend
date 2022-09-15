@@ -108,6 +108,7 @@ pub async fn new_message(
                         if blocked {
                             return group.add_new_message(&user, "BLOCKED", pool).await;
                         } else {
+                            log::info!("not blocked and updating group");
                             // make all users members of the group man.
                             sqlx::query!(
                                 r#"
@@ -119,6 +120,7 @@ pub async fn new_message(
                             )
                             .execute(pool.get_ref())
                             .await.ok();
+                            log::info!("Updated user_groups");
                         }
                     }
                 }
