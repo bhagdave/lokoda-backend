@@ -133,7 +133,7 @@ pub async fn get_users_groups(
                 user_groups.unread
             FROM 
                 `groups` 
-            JOIN user_groups ON group_id = groups.id AND user_id = ?
+            JOIN user_groups ON group_id = groups.id AND user_id = ? AND `left` = 0
         "#,
         user
     )
