@@ -96,7 +96,6 @@ pub async fn new_message(
     pool: &web::Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     let mut group = Group::get_group(&new_message.group_id, pool).await;
-    // TODO::Check if a chat and that the other user in thr geoup is not a blocked contact/
     if group.chat.unwrap() == 1 {
         log::info!("We have a chat");
         group.get_users(&pool).await;
@@ -108,6 +107,18 @@ pub async fn new_message(
                         let blocked = Group::check_blocked(user, &e.id, pool).await;
                         if blocked {
                             return group.add_new_message(&user, "BLOCKED", pool).await;
+                        } else {
+                            // make all users members of the group man.
+                            sqlx::query!(
+                                r#"
+                                UPDATE `user_groups`
+                                SET `left` = 0, `left_on` = null
+                                WHERE group_id = ?
+                                "#,
+                                group.id,
+                            )
+                            .execute(pool.get_ref())
+                            .await.ok();
                         }
                     }
                 }
