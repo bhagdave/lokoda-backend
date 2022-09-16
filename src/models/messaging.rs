@@ -104,8 +104,10 @@ pub async fn new_message(
                 for (_pos, e) in users.iter().enumerate() {
                     log::info!("User is {} and e.id is {} and GROUP is {}", user, e.id, group.id);
                     if e.id != user {
+                        log::info!("Checking if we are blocked or not");
                         // check blocked contacts mate
                         let blocked = Group::check_blocked(user, &e.id, pool).await;
+                        log::info!("Got check back and it is {}", blocked);
                         if blocked {
                             log::info!("BLOCKED by recipient {}", &e.id);
                             return group.add_new_message(&user, &new_message.message, pool).await;
