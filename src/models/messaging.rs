@@ -251,13 +251,17 @@ pub async fn block_contact(
     contact_id: &str,
     pool: &web::Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
+    log::info!("Blocking contact {}", contact_id);
     sqlx::query!(
         r#"
         UPDATE contacts SET blocked = 1
-        WHERE user_id = ? and contact_id = ?
+        WHERE (user_id = ? and contact_id = ?) OR
+        (user_id = ? and contact_id = ?)
         "#,
         user_id,
         contact_id,
+        contact_id,
+        user_id,
     )
     .execute(pool.get_ref())
     .await
