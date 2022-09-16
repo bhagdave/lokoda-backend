@@ -107,7 +107,7 @@ pub async fn new_message(
                         // check blocked contacts mate
                         let blocked = Group::check_blocked(user, &e.id, pool).await;
                         if blocked {
-                            return group.add_new_message(&user, "BLOCKED", pool).await;
+                            return group.add_new_message(&user, &new_message.message, pool).await;
                         } else {
                             // make all users members of the group man.
                             sqlx::query!(
@@ -251,7 +251,7 @@ pub async fn block_contact(
     contact_id: &str,
     pool: &web::Data<MySqlPool>,
 ) -> Result<MySqlQueryResult, sqlx::Error> {
-    log::info!("Blocking contact {}", contact_id);
+    log::info!("BLOCK::Blocking contact {}", contact_id);
     sqlx::query!(
         r#"
         UPDATE contacts SET blocked = 1
