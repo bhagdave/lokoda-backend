@@ -98,18 +98,6 @@ pub async fn new_message(
     let mut group = Group::get_group(&new_message.group_id, pool).await;
     if group.chat.unwrap() == 1 {
         log::info!("We have a chat");
-        // make all users members of the group man.
-        sqlx::query!(
-            r#"
-            UPDATE `user_groups`
-            SET `left` = 0, `left_on` = null
-            WHERE group_id = ?
-            "#,
-            group.id,
-        )
-        .execute(pool.get_ref())
-        .await.ok();
-        log::info!("Updated user_groups");
         group.get_users(&pool).await;
         match &group.users {
             Some(users) => {
@@ -120,6 +108,19 @@ pub async fn new_message(
                         let blocked = Group::check_blocked(user, &e.id, pool).await;
                         if blocked {
                             return group.add_new_message(&user, "BLOCKED", pool).await;
+                        } else {
+                            // make all users members of the group man.
+                            sqlx::query!(
+                                r#"
+                                UPDATE `user_groups`
+                                SET `left` = 0, `left_on` = null
+                                WHERE group_id = ?
+                                "#,
+                                group.id,
+                            )
+                            .execute(pool.get_ref())
+                            .await.ok();
+                            log::info!("Updated user_groups");
                         }
                     }
                 }
