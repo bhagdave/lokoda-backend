@@ -406,7 +406,7 @@ pub async fn unread_messages(session: Session, pool: web::Data<MySqlPool>) -> Ht
                     let unread = messaging::unread_messages(&user, &pool).await;
                     HttpResponse::Ok().json(unread)
                 }
-                Err(_) => HttpResponse::Ok().json("not logged_in"),
+                Err(_) => HttpResponse::Ok().json(""),
             }
         }
         Ok(None) => HttpResponse::Ok().json("No Session"),
