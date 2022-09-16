@@ -98,7 +98,7 @@ pub async fn new_message(
     let mut group = Group::get_group(&new_message.group_id, pool).await;
     if group.chat.unwrap() == 1 {
         log::info!("NEW_MESSAGE:We have a chat");
-        group.get_users(&pool).await;
+        group.get_all_users(&pool).await;
         match &group.users {
             Some(users) => {
                 for (_pos, e) in users.iter().enumerate() {
@@ -625,6 +625,24 @@ impl Group {
                 SELECT users.id, users.name, users.email, users.account_type, users.location, users.embed_url, users.image_url, users.avatar_url, users.bio
                 FROM users
                 JOIN user_groups ON user_groups.user_id = users.id AND group_id = ? AND `user_groups`.`left` = 0
+            "#,
+            self.id,
+        ).fetch_all(pool.get_ref())
+        .await {
+            Ok(users) => {
+                self.users = Some(users);
+            }
+            Err(_) => {
+                self.users = None
+            }
+        }
+    }
+    async fn get_all_users(&mut self, pool: &web::Data<MySqlPool>) {
+        match sqlx::query_as!(ProfileData,
+            r#"
+                SELECT users.id, users.name, users.email, users.account_type, users.location, users.embed_url, users.image_url, users.avatar_url, users.bio
+                FROM users
+                JOIN user_groups ON user_groups.user_id = users.id AND group_id = ?
             "#,
             self.id,
         ).fetch_all(pool.get_ref())
