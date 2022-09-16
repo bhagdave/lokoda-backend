@@ -102,7 +102,7 @@ pub async fn new_message(
         match &group.users {
             Some(users) => {
                 for (_pos, e) in users.iter().enumerate() {
-                    log::info!("User is {} and e.id is {}", user, e.id);
+                    log::info!("User is {} and e.id is {} and GROUP is {}", user, e.id, group.id);
                     if e.id != user {
                         // check blocked contacts mate
                         let blocked = Group::check_blocked(user, &e.id, pool).await;
