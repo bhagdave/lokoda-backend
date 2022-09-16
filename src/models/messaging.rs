@@ -107,8 +107,10 @@ pub async fn new_message(
                         // check blocked contacts mate
                         let blocked = Group::check_blocked(user, &e.id, pool).await;
                         if blocked {
+                            log::info!("BLOCKED by recipient {}", &e.id);
                             return group.add_new_message(&user, &new_message.message, pool).await;
                         } else {
+                            log::info!("MADE GROUP {} all join in", group.id);
                             // make all users members of the group man.
                             sqlx::query!(
                                 r#"
