@@ -97,22 +97,22 @@ pub async fn new_message(
 ) -> Result<MySqlQueryResult, sqlx::Error> {
     let mut group = Group::get_group(&new_message.group_id, pool).await;
     if group.chat.unwrap() == 1 {
-        log::info!("We have a chat");
+        log::info!("NEW_MESSAGE:We have a chat");
         group.get_users(&pool).await;
         match &group.users {
             Some(users) => {
                 for (_pos, e) in users.iter().enumerate() {
-                    log::info!("User is {} and e.id is {} and GROUP is {}", user, e.id, group.id);
+                    log::info!("NEW_MESSAGE:User is {} and e.id is {} and GROUP is {}", user, e.id, group.id);
                     if e.id != user {
-                        log::info!("Checking if we are blocked or not");
+                        log::info!("NEW_MESSAGE:Checking if we are blocked or not");
                         // check blocked contacts mate
                         let blocked = Group::check_blocked(user, &e.id, pool).await;
-                        log::info!("Got check back and it is {}", blocked);
+                        log::info!("NEW_MESSAGE:Got check back and it is {}", blocked);
                         if blocked {
-                            log::info!("BLOCKED by recipient {}", &e.id);
+                            log::info!("NEW_MESSAGE:BLOCKED by recipient {}", &e.id);
                             return group.add_new_message(&user, &new_message.message, pool).await;
                         } else {
-                            log::info!("MADE GROUP {} all join in", group.id);
+                            log::info!("NEW_MESSAGE:MADE GROUP {} all join in", group.id);
                             // make all users members of the group man.
                             sqlx::query!(
                                 r#"
@@ -124,8 +124,10 @@ pub async fn new_message(
                             )
                             .execute(pool.get_ref())
                             .await.ok();
-                            log::info!("Updated user_groups");
+                            log::info!("NEW_MESSAGE:Updated user_groups");
                         }
+                    } else {
+                        log::info!("NEW_MESSAGE:USER=USER");
                     }
                 }
             }
