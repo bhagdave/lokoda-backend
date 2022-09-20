@@ -280,7 +280,10 @@ pub async fn create_group(
     let mut group = Group::new_group(&new_group.name, false, &pool).await;
     group.add_new_user(&user, &pool).await?;
     for user_id in &new_group.users {
-        group.add_new_user(&user_id, &pool).await?;
+        let blocked = Group::check_blocked(user_id, user, pool).await;
+        if !blocked {
+            group.add_new_user(&user_id, &pool).await?;
+        }
     }
     group.get_users(&pool).await;
 
@@ -294,7 +297,10 @@ pub async fn create_chat(
     let mut group = Group::new_group(&new_group.name, true, &pool).await;
     group.add_new_user(&user, &pool).await?;
     for user_id in &new_group.users {
-        group.add_new_user(&user_id, &pool).await?;
+        let blocked = Group::check_blocked(user_id, user, pool).await;
+        if !blocked {
+            group.add_new_user(&user_id, &pool).await?;
+        }
     }
     group.get_users(&pool).await;
 
