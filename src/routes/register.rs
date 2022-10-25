@@ -1,9 +1,10 @@
-use crate::models::users::*;
 use actix_session::Session;
+use actix_web::{HttpResponse, web};
 use actix_web::http::header::ContentType;
-use actix_web::{web, HttpResponse};
 use bcrypt::*;
 use sqlx::MySqlPool;
+
+use crate::models::users::*;
 
 pub async fn register(
     session: Session,

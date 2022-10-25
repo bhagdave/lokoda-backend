@@ -1,6 +1,7 @@
-use crate::models::search::*;
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use sqlx::MySqlPool;
+
+use crate::models::search::*;
 
 pub async fn discover_index() -> HttpResponse {
     HttpResponse::Ok().finish()

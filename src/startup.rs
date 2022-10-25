@@ -1,11 +1,13 @@
-use crate::routes::*;
+use std::net::TcpListener;
+
 use actix_session::CookieSession;
+use actix_web::{App, HttpServer, middleware, web};
 use actix_web::dev::Server;
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
-use actix_web::{middleware, web, App, HttpServer};
 use sqlx::MySqlPool;
-use std::net::TcpListener;
+
+use crate::routes::*;
 
 pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io::Error> {
     let db_pool = Data::new(db_pool);
@@ -83,7 +85,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
                     .route("{id}/messages", web::get().to(get_messages)),
             )
     })
-    .listen(listener)?
-    .run();
+        .listen(listener)?
+        .run();
     Ok(server)
 }

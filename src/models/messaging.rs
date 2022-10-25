@@ -1,14 +1,14 @@
-use crate::models::users::*;
 use actix_web::web;
-use guid_create::GUID;
-use serde::{Deserialize, Serialize};
-use sqlx::mysql::MySqlQueryResult;
-use sqlx::types::chrono::NaiveDateTime;
-use sqlx::MySqlPool;
-
 use futures::stream::futures_unordered::FuturesUnordered;
 use futures::stream::StreamExt;
+use guid_create::GUID;
 use log::error;
+use serde::{Deserialize, Serialize};
+use sqlx::mysql::MySqlQueryResult;
+use sqlx::MySqlPool;
+use sqlx::types::chrono::NaiveDateTime;
+
+use crate::models::users::*;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Contact {
@@ -64,9 +64,11 @@ pub struct NewGroup {
     name: String,
     pub users: Vec<String>,
 }
+
 fn print_type_of<T>(_: &T) {
     println!("{}", std::any::type_name::<T>())
 }
+
 pub async fn get_groups(
     user: &str,
     pool: &web::Data<MySqlPool>,
@@ -88,8 +90,9 @@ pub async fn get_groups(
         "#,
         user
     ).fetch_all(pool.get_ref())
-    .await
+        .await
 }
+
 pub async fn new_message(
     user: &str,
     new_message: &web::Json<NewMessage>,
@@ -102,7 +105,12 @@ pub async fn new_message(
         match &group.users {
             Some(users) => {
                 for (_pos, e) in users.iter().enumerate() {
-                    log::info!("NEW_MESSAGE:User is {} and e.id is {} and GROUP is {}", user, e.id, group.id);
+                    log::info!(
+                        "NEW_MESSAGE:User is {} and e.id is {} and GROUP is {}",
+                        user,
+                        e.id,
+                        group.id
+                    );
                     if e.id != user {
                         log::info!("NEW_MESSAGE:Checking if we are blocked or not");
                         // check blocked contacts mate
@@ -110,7 +118,9 @@ pub async fn new_message(
                         log::info!("NEW_MESSAGE:Got check back and it is {}", blocked);
                         if blocked {
                             log::info!("NEW_MESSAGE:BLOCKED by recipient {}", &e.id);
-                            return group.add_new_message(&user, &new_message.message, pool).await;
+                            return group
+                                .add_new_message(&user, &new_message.message, pool)
+                                .await;
                         } else {
                             log::info!("NEW_MESSAGE:MADE GROUP {} all join in", group.id);
                             // make all users members of the group man.
@@ -122,8 +132,9 @@ pub async fn new_message(
                                 "#,
                                 group.id,
                             )
-                            .execute(pool.get_ref())
-                            .await.ok();
+                                .execute(pool.get_ref())
+                                .await
+                                .ok();
                             log::info!("NEW_MESSAGE:Updated user_groups");
                         }
                     } else {
@@ -140,6 +151,7 @@ pub async fn new_message(
         .add_new_message(&user, &new_message.message, pool)
         .await
 }
+
 pub async fn get_users_groups(
     user: &str,
     pool: &web::Data<MySqlPool>,
@@ -156,17 +168,17 @@ pub async fn get_users_groups(
         "#,
         user
     )
-    .map(|row| Group {
-        id: row.id,
-        name: row.name,
-        messages: None,
-        users: None,
-        last_message: None,
-        unread: row.unread,
-        chat: None,
-    })
-    .fetch_all(pool.get_ref())
-    .await?;
+        .map(|row| Group {
+            id: row.id,
+            name: row.name,
+            messages: None,
+            users: None,
+            last_message: None,
+            unread: row.unread,
+            chat: None,
+        })
+        .fetch_all(pool.get_ref())
+        .await?;
     rows.iter_mut()
         .map(|row| row.fetch_messages(&pool))
         .collect::<FuturesUnordered<_>>()
@@ -185,6 +197,7 @@ pub async fn get_users_groups(
     rows.sort_by(|a, b| b.last_message.cmp(&a.last_message));
     Ok(rows)
 }
+
 pub async fn get_group(
     group_id: &str,
     user: &str,
@@ -196,6 +209,7 @@ pub async fn get_group(
     group.mark_read(&user, &pool).await;
     Ok(group)
 }
+
 pub async fn fetch_contacts(
     user: &str,
     pool: &web::Data<MySqlPool>,
@@ -217,9 +231,10 @@ pub async fn fetch_contacts(
         "#,
         user
     )
-    .fetch_all(pool.get_ref())
-    .await
+        .fetch_all(pool.get_ref())
+        .await
 }
+
 pub async fn add_contact(
     user_id: &str,
     contact_id: &str,
@@ -233,9 +248,10 @@ pub async fn add_contact(
         user_id,
         contact_id,
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn delete_contact(
     user_id: &str,
     contact_id: &str,
@@ -249,9 +265,10 @@ pub async fn delete_contact(
         user_id,
         contact_id,
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn block_contact(
     user_id: &str,
     contact_id: &str,
@@ -269,9 +286,10 @@ pub async fn block_contact(
         contact_id,
         user_id,
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn create_group(
     user: &str,
     new_group: web::Json<NewGroup>,
@@ -289,6 +307,7 @@ pub async fn create_group(
 
     Ok(group)
 }
+
 pub async fn create_chat(
     user: &str,
     new_group: web::Json<NewGroup>,
@@ -306,6 +325,7 @@ pub async fn create_chat(
 
     Ok(group)
 }
+
 pub async fn leave_group(
     user: &str,
     group: &str,
@@ -321,8 +341,8 @@ pub async fn leave_group(
         user,
         group,
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
 
 pub async fn join_group(
@@ -339,9 +359,10 @@ pub async fn join_group(
         user,
         group,
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn unread_messages(user: &str, pool: &web::Data<MySqlPool>) -> i64 {
     let record = sqlx::query!(
         r#"
@@ -351,13 +372,14 @@ pub async fn unread_messages(user: &str, pool: &web::Data<MySqlPool>) -> i64 {
         "#,
         user,
     )
-    .fetch_one(pool.get_ref())
-    .await;
+        .fetch_one(pool.get_ref())
+        .await;
     match record {
         Ok(record) => record.unread.unwrap(),
         Err(_) => 0,
     }
 }
+
 pub async fn check_user_is_in_group(
     user: &str,
     new_message: &web::Json<NewMessage>,
@@ -370,13 +392,14 @@ pub async fn check_user_is_in_group(
         user,
         new_message.group_id
     )
-    .fetch_one(pool.get_ref())
-    .await
+        .fetch_one(pool.get_ref())
+        .await
     {
         Ok(_blocked) => true,
         Err(_e) => false,
     }
 }
+
 pub async fn get_messages(
     group_id: &str,
     pool: &web::Data<MySqlPool>,
@@ -398,8 +421,8 @@ impl Group {
             "SELECT name,chat,last_message FROM `groups` WHERE id = ?",
             group_id
         )
-        .fetch_one(pool.get_ref())
-        .await;
+            .fetch_one(pool.get_ref())
+            .await;
         match group {
             Ok(group) => Self {
                 id: group_id.to_string(),
@@ -433,9 +456,9 @@ impl Group {
             name,
             chat,
         )
-        .execute(pool.get_ref())
-        .await
-        .unwrap();
+            .execute(pool.get_ref())
+            .await
+            .unwrap();
         log::info!("Group id is {}", guid);
         Self {
             id: guid.to_string(),
@@ -455,8 +478,8 @@ impl Group {
             user,
             contact
         )
-        .fetch_one(pool.get_ref())
-        .await
+            .fetch_one(pool.get_ref())
+            .await
         {
             Ok(_blocked) => true,
             Err(_e) => false,
@@ -478,8 +501,8 @@ impl Group {
             self.id,
             user_id,
         )
-        .execute(pool.get_ref())
-        .await?;
+            .execute(pool.get_ref())
+            .await?;
         sqlx::query!(
             r#"
             INSERT INTO `messages` (id, group_id, user_id, message, created_at)
@@ -490,8 +513,8 @@ impl Group {
             user_id,
             message,
         )
-        .execute(pool.get_ref())
-        .await?;
+            .execute(pool.get_ref())
+            .await?;
         sqlx::query!(
             r#"
             UPDATE `groups` SET last_message = now()
@@ -499,8 +522,8 @@ impl Group {
             "#,
             self.id
         )
-        .execute(pool.get_ref())
-        .await?;
+            .execute(pool.get_ref())
+            .await?;
         sqlx::query!(
             r#"
             INSERT INTO user_messages
@@ -511,8 +534,8 @@ impl Group {
             guid.to_string(),
             self.id
         )
-        .execute(pool.get_ref())
-        .await?;
+            .execute(pool.get_ref())
+            .await?;
         sqlx::query!(
             r#"
             UPDATE `user_groups` SET unread = unread + 1
@@ -522,8 +545,8 @@ impl Group {
             self.id,
             user_id
         )
-        .execute(pool.get_ref())
-        .await
+            .execute(pool.get_ref())
+            .await
     }
     pub async fn add_new_user(
         &self,
@@ -538,8 +561,8 @@ impl Group {
             self.id,
             user_id,
         )
-        .execute(pool.get_ref())
-        .await
+            .execute(pool.get_ref())
+            .await
     }
     pub async fn fetch_messages(&mut self, pool: &web::Data<MySqlPool>) {
         match sqlx::query_as!(Message,
@@ -553,7 +576,7 @@ impl Group {
             "#,
             self.id,
         ).fetch_all(pool.get_ref())
-        .await
+            .await
         {
             Ok(messages) => {
                 self.messages = Some(messages);
@@ -576,7 +599,7 @@ impl Group {
             "#,
             self.id,
         ).fetch_one(pool.get_ref())
-        .await
+            .await
         {
             Ok(message) => {
                 self.last_message = Some(message.created_at);
@@ -596,8 +619,8 @@ impl Group {
             self.id,
             user
         )
-        .execute(pool.get_ref())
-        .await;
+            .execute(pool.get_ref())
+            .await;
         match update {
             Ok(_) => {
                 log::info!("Cleared group:{} for user:{}", self.id, &user);
@@ -614,8 +637,8 @@ impl Group {
             self.id,
             user,
         )
-        .execute(pool.get_ref())
-        .await;
+            .execute(pool.get_ref())
+            .await;
         match update {
             Ok(_) => {
                 log::info!("Cleared group:{} for user:{}", self.id, &user);
@@ -634,7 +657,7 @@ impl Group {
             "#,
             self.id,
         ).fetch_all(pool.get_ref())
-        .await {
+            .await {
             Ok(users) => {
                 self.users = Some(users);
             }
@@ -652,7 +675,7 @@ impl Group {
             "#,
             self.id,
         ).fetch_all(pool.get_ref())
-        .await {
+            .await {
             Ok(users) => {
                 self.users = Some(users);
             }

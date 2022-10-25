@@ -30,8 +30,8 @@ pub async fn get_genre_list(pool: &web::Data<MySqlPool>) -> Result<Vec<Genre>, s
             ORDER BY genre
         "#
     )
-    .fetch_all(pool.get_ref())
-    .await
+        .fetch_all(pool.get_ref())
+        .await
 }
 
 pub async fn add_genre_to_user(
@@ -47,8 +47,8 @@ pub async fn add_genre_to_user(
         genre,
         userid,
     )
-    .execute(pool.get_ref())
-    .await;
+        .execute(pool.get_ref())
+        .await;
     match insert {
         Ok(record) => Ok(record),
         Err(e) => {
@@ -71,8 +71,8 @@ pub async fn delete_genre_from_user(
         genre,
         userid,
     )
-    .execute(pool.get_ref())
-    .await;
+        .execute(pool.get_ref())
+        .await;
     match delete {
         Ok(record) => Ok(record),
         Err(e) => {
@@ -97,6 +97,6 @@ pub async fn get_user_genre_list(
         "#,
         userid,
     )
-    .fetch_all(pool.get_ref())
-    .await
+        .fetch_all(pool.get_ref())
+        .await
 }

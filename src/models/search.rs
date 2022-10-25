@@ -39,5 +39,5 @@ pub async fn do_search(
         form.name,
         form.genre,
     ).fetch_all(pool.get_ref())
-    .await
+        .await
 }
