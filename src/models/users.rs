@@ -105,8 +105,8 @@ impl ProfileData {
                                                     FROM `users` WHERE id = ?",
             user_id
         )
-        .fetch_one(pool.get_ref())
-        .await;
+            .fetch_one(pool.get_ref())
+            .await;
         match profile {
             Ok(profile) => profile,
             Err(_) => Self {
@@ -133,8 +133,8 @@ impl ProfileData {
             bio,
             self.id
         )
-        .execute(pool.get_ref())
-        .await;
+            .execute(pool.get_ref())
+            .await;
     }
 }
 
@@ -156,6 +156,7 @@ pub async fn update_bio(
     profile.update_bio(&safe_content, pool).await;
     Ok(profile)
 }
+
 pub async fn get_social_links(
     user: &str,
     pool: &Data<MySqlPool>,
@@ -170,9 +171,10 @@ pub async fn get_social_links(
         "#,
         user
     )
-    .fetch_all(pool.get_ref())
-    .await
+        .fetch_all(pool.get_ref())
+        .await
 }
+
 pub async fn add_social_link_to_user(
     user: &str,
     social_link: Json<SocialLink>,
@@ -187,9 +189,10 @@ pub async fn add_social_link_to_user(
         social_link.url,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn get_login_data(email: &str, pool: &Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
     // get user from database table
     let user_record = sqlx::query_as!(
@@ -202,10 +205,11 @@ pub async fn get_login_data(email: &str, pool: &Data<MySqlPool>) -> Result<Login
         "#,
         email
     )
-    .fetch_one(pool.get_ref())
-    .await;
+        .fetch_one(pool.get_ref())
+        .await;
     user_record
 }
+
 pub async fn set_remember_token(
     email: &str,
     pool: &Data<MySqlPool>,
@@ -220,10 +224,11 @@ pub async fn set_remember_token(
         guid.to_string(),
         email
     )
-    .execute(pool.get_ref())
-    .await;
+        .execute(pool.get_ref())
+        .await;
     update
 }
+
 pub async fn get_simple_user(
     form: &Json<UpdatePassword>,
     pool: &Data<MySqlPool>,
@@ -240,10 +245,11 @@ pub async fn get_simple_user(
         form.email,
         form.remember_token
     )
-    .fetch_one(pool.get_ref())
-    .await;
+        .fetch_one(pool.get_ref())
+        .await;
     user_record
 }
+
 pub async fn update_user_password(
     password: &str,
     id: &str,
@@ -257,9 +263,10 @@ pub async fn update_user_password(
         password,
         id
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn create_session_token(id: &str, pool: &Data<MySqlPool>) -> Result<String, sqlx::Error> {
     let existing_token = sqlx::query!(
         r#"
@@ -269,8 +276,8 @@ pub async fn create_session_token(id: &str, pool: &Data<MySqlPool>) -> Result<St
         "#,
         id
     )
-    .fetch_one(pool.get_ref())
-    .await;
+        .fetch_one(pool.get_ref())
+        .await;
     match existing_token {
         Ok(record) => {
             return Ok(record.token);
@@ -286,8 +293,8 @@ pub async fn create_session_token(id: &str, pool: &Data<MySqlPool>) -> Result<St
         id,
         token.to_string()
     )
-    .execute(pool.get_ref())
-    .await;
+        .execute(pool.get_ref())
+        .await;
     match insert {
         Ok(_) => Ok(token.to_string()),
         Err(e) => {
@@ -296,6 +303,7 @@ pub async fn create_session_token(id: &str, pool: &Data<MySqlPool>) -> Result<St
         }
     }
 }
+
 pub async fn check_session_token(
     token: &str,
     pool: &Data<MySqlPool>,
@@ -308,14 +316,15 @@ pub async fn check_session_token(
         "#,
         token
     )
-    .fetch_one(pool.get_ref())
-    .await;
+        .fetch_one(pool.get_ref())
+        .await;
 
     match result {
         Ok(user) => Ok(user.user),
         Err(e) => Err(e),
     }
 }
+
 pub async fn register_new_user(
     form: &Json<UserData>,
     pool: &Data<MySqlPool>,
@@ -332,9 +341,10 @@ pub async fn register_new_user(
         form.account_type,
         form.location
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn add_embed_url_to_user(
     user: &str,
     url: &Json<AddUrl>,
@@ -348,9 +358,10 @@ pub async fn add_embed_url_to_user(
         url.url,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn delete_embed_url_from_user(
     user: &str,
     pool: &Data<MySqlPool>,
@@ -362,9 +373,10 @@ pub async fn delete_embed_url_from_user(
         "#,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn add_avatar_url_to_user(
     user: &str,
     url: &Json<AddUrl>,
@@ -378,9 +390,10 @@ pub async fn add_avatar_url_to_user(
         url.url,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn delete_avatar_url_from_user(
     user: &str,
     pool: &Data<MySqlPool>,
@@ -392,9 +405,10 @@ pub async fn delete_avatar_url_from_user(
         "#,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn add_image_url_to_user(
     user: &str,
     url: &Json<AddUrl>,
@@ -408,9 +422,10 @@ pub async fn add_image_url_to_user(
         url.url,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn delete_image_url_from_user(
     user: &str,
     pool: &Data<MySqlPool>,
@@ -422,9 +437,10 @@ pub async fn delete_image_url_from_user(
         "#,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn update_profile(
     user: &str,
     profile: &Json<UpdateProfileData>,
@@ -443,8 +459,9 @@ pub async fn update_profile(
         profile.avatar_url,
         user
     ).execute(pool.get_ref())
-    .await
+        .await
 }
+
 pub async fn change_password_for_user(
     user: &str,
     password: &Json<PasswordUpdate>,
@@ -465,9 +482,10 @@ pub async fn change_password_for_user(
         password_hash,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }
+
 pub async fn get_user(user: &str, pool: &Data<MySqlPool>) -> Result<LoginData, sqlx::Error> {
     let user = sqlx::query_as!(
         LoginData,
@@ -479,10 +497,11 @@ pub async fn get_user(user: &str, pool: &Data<MySqlPool>) -> Result<LoginData, s
         "#,
         user
     )
-    .fetch_one(pool.get_ref())
-    .await;
+        .fetch_one(pool.get_ref())
+        .await;
     user
 }
+
 pub async fn delete_user_account(
     user: &str,
     pool: &Data<MySqlPool>,
@@ -493,22 +512,22 @@ pub async fn delete_user_account(
         "#,
         user
     )
-    .execute(pool.get_ref())
-    .await?;
+        .execute(pool.get_ref())
+        .await?;
     sqlx::query!(
         r#"
         DELETE FROM user_genres WHERE user_id = ?
         "#,
         user
     )
-    .execute(pool.get_ref())
-    .await?;
+        .execute(pool.get_ref())
+        .await?;
     sqlx::query!(
         r#"
         DELETE FROM users WHERE users.id = ?
         "#,
         user
     )
-    .execute(pool.get_ref())
-    .await
+        .execute(pool.get_ref())
+        .await
 }

@@ -1,10 +1,11 @@
+use actix_session::Session;
+use actix_web::{HttpResponse, web};
+use bcrypt::*;
+use sqlx::MySqlPool;
+
 use crate::models::genre::*;
 use crate::models::shows::*;
 use crate::models::users::*;
-use actix_session::Session;
-use actix_web::{web, HttpResponse};
-use bcrypt::*;
-use sqlx::MySqlPool;
 
 pub async fn profile_index(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
@@ -35,6 +36,7 @@ pub async fn profile_index(session: Session, pool: web::Data<MySqlPool>) -> Http
         }
     }
 }
+
 pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse {
     match get_profile_data(&user_id, &pool).await {
         Ok(profile) => HttpResponse::Ok().json(profile),
@@ -44,6 +46,7 @@ pub async fn get_profile(user_id: web::Path<String>, pool: web::Data<MySqlPool>)
         }
     }
 }
+
 pub async fn profile_update(
     session: Session,
     profile: web::Json<UpdateProfileData>,
@@ -71,6 +74,7 @@ pub async fn profile_update(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn bio_update(
     session: Session,
     bio: web::Json<BioUpdate>,
@@ -95,6 +99,7 @@ pub async fn bio_update(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn get_genres(pool: web::Data<MySqlPool>) -> HttpResponse {
     let genres = get_genre_list(&pool).await;
     match genres {
@@ -102,6 +107,7 @@ pub async fn get_genres(pool: web::Data<MySqlPool>) -> HttpResponse {
         Err(_) => HttpResponse::Ok().json("No Genres found"),
     }
 }
+
 pub async fn add_genre(
     session: Session,
     form: web::Json<UserGenre>,
@@ -129,6 +135,7 @@ pub async fn add_genre(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn delete_genre(
     session: Session,
     form: web::Json<UserGenre>,
@@ -156,6 +163,7 @@ pub async fn delete_genre(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -176,6 +184,7 @@ pub async fn get_user_genres(session: Session, pool: web::Data<MySqlPool>) -> Ht
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn get_social(user_id: web::Path<String>, pool: web::Data<MySqlPool>) -> HttpResponse {
     // Need to know the user id.
     match get_social_links(&user_id, &pool).await {
@@ -183,6 +192,7 @@ pub async fn get_social(user_id: web::Path<String>, pool: web::Data<MySqlPool>) 
         Err(_) => HttpResponse::Ok().json("Unable to obtain shows"),
     }
 }
+
 pub async fn get_genres_for_profile(
     user_id: web::Path<String>,
     pool: web::Data<MySqlPool>,
@@ -193,6 +203,7 @@ pub async fn get_genres_for_profile(
         Err(_) => HttpResponse::Ok().json("Unable to obtain genres"),
     }
 }
+
 pub async fn get_shows_for_profile(
     user_id: web::Path<String>,
     pool: web::Data<MySqlPool>,
@@ -203,6 +214,7 @@ pub async fn get_shows_for_profile(
         Err(_) => HttpResponse::Ok().json("Unable to obtain shows"),
     }
 }
+
 pub async fn add_show(
     session: Session,
     add_show: web::Json<Show>,
@@ -224,6 +236,7 @@ pub async fn add_show(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn cancel_user_show(
     session: Session,
     show_id: web::Path<String>,
@@ -245,6 +258,7 @@ pub async fn cancel_user_show(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn update_show(
     session: Session,
     update_show: web::Json<Show>,
@@ -266,6 +280,7 @@ pub async fn update_show(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn add_embed_url(
     session: Session,
     add_url: web::Json<AddUrl>,
@@ -287,6 +302,7 @@ pub async fn add_embed_url(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn delete_embed_url(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -304,6 +320,7 @@ pub async fn delete_embed_url(session: Session, pool: web::Data<MySqlPool>) -> H
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn add_image_url(
     session: Session,
     add_url: web::Json<AddUrl>,
@@ -325,6 +342,7 @@ pub async fn add_image_url(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn delete_image_url(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -342,6 +360,7 @@ pub async fn delete_image_url(session: Session, pool: web::Data<MySqlPool>) -> H
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn add_avatar(
     session: Session,
     add_url: web::Json<AddUrl>,
@@ -363,6 +382,7 @@ pub async fn add_avatar(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn delete_avatar(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -380,6 +400,7 @@ pub async fn delete_avatar(session: Session, pool: web::Data<MySqlPool>) -> Http
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn update_user_password(
     session: Session,
     new_password: web::Json<PasswordUpdate>,
@@ -411,6 +432,7 @@ pub async fn update_user_password(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn delete_account(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -428,6 +450,7 @@ pub async fn delete_account(session: Session, pool: web::Data<MySqlPool>) -> Htt
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn social_link(
     session: Session,
     social_link: web::Json<SocialLink>,

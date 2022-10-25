@@ -48,8 +48,8 @@ pub async fn add_user_show(
         show.time,
         show.comments
     )
-    .execute(pool.get_ref())
-    .await;
+        .execute(pool.get_ref())
+        .await;
     match insert {
         Ok(record) => Ok(record),
         Err(e) => {
@@ -79,8 +79,8 @@ pub async fn update_user_show(
         show.comments,
         show.id
     )
-    .execute(pool.get_ref())
-    .await;
+        .execute(pool.get_ref())
+        .await;
     match update {
         Ok(record) => Ok(record),
         Err(e) => {
@@ -106,8 +106,8 @@ pub async fn get_user_shows(
         "#,
         userid
     )
-    .fetch_all(pool.get_ref())
-    .await
+        .fetch_all(pool.get_ref())
+        .await
 }
 
 pub async fn cancel_show(
@@ -123,8 +123,8 @@ pub async fn cancel_show(
         show_id,
         user_id
     )
-    .execute(pool.get_ref())
-    .await;
+        .execute(pool.get_ref())
+        .await;
     match update {
         Ok(record) => Ok(record),
         Err(e) => {

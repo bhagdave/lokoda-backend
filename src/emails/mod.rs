@@ -1,8 +1,9 @@
-use crate::configuration::*;
-use lettre::smtp::authentication::Credentials;
 use lettre::{ClientSecurity, ClientTlsParameters, SmtpClient, Transport};
+use lettre::smtp::authentication::Credentials;
 use lettre_email::EmailBuilder;
 use native_tls::{Protocol, TlsConnector};
+
+use crate::configuration::*;
 
 pub fn send_email(to: &str, from: &str, subject: &str, body: &str) {
     let configuration = get_configuration().expect("Failed to read configuration.");
@@ -37,9 +38,9 @@ pub fn send_email(to: &str, from: &str, subject: &str, body: &str) {
         ),
         ClientSecurity::Required(tls_parameters),
     )
-    .unwrap()
-    .credentials(creds)
-    .transport();
+        .unwrap()
+        .credentials(creds)
+        .transport();
 
     // Send the email
     match mailer.send(email.into()) {

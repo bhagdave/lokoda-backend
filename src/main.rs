@@ -1,8 +1,10 @@
+use std::net::TcpListener;
+
 use env_logger::Env;
+use sqlx::mysql::MySqlPoolOptions;
+
 use lokoda_backend::configuration::*;
 use lokoda_backend::startup::run;
-use sqlx::mysql::MySqlPoolOptions;
-use std::net::TcpListener;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

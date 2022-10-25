@@ -1,8 +1,9 @@
-use crate::models::users::*;
-use crate::models::*;
 use actix_session::Session;
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use sqlx::MySqlPool;
+
+use crate::models::*;
+use crate::models::users::*;
 
 pub async fn new_message(
     session: Session,
@@ -38,6 +39,7 @@ pub async fn new_message(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn block_contact(
     contact_id: web::Path<String>,
     session: Session,
@@ -71,6 +73,7 @@ pub async fn block_contact(
         }
     }
 }
+
 pub async fn block_contacts(
     session: Session,
     contacts: web::Json<ContactList>,
@@ -110,6 +113,7 @@ pub async fn block_contacts(
         }
     }
 }
+
 pub async fn new_contact(
     contact_id: web::Path<String>,
     session: Session,
@@ -143,6 +147,7 @@ pub async fn new_contact(
         }
     }
 }
+
 pub async fn delete_contact(
     contact_id: web::Path<String>,
     session: Session,
@@ -176,6 +181,7 @@ pub async fn delete_contact(
         }
     }
 }
+
 pub async fn delete_contacts(
     session: Session,
     contacts: web::Json<ContactList>,
@@ -215,6 +221,7 @@ pub async fn delete_contacts(
         }
     }
 }
+
 pub async fn leave_group(
     group_id: web::Path<String>,
     session: Session,
@@ -248,6 +255,7 @@ pub async fn leave_group(
         }
     }
 }
+
 pub async fn get_contacts(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -277,6 +285,7 @@ pub async fn get_contacts(session: Session, pool: web::Data<MySqlPool>) -> HttpR
         }
     }
 }
+
 pub async fn get_groups(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -306,6 +315,7 @@ pub async fn get_groups(session: Session, pool: web::Data<MySqlPool>) -> HttpRes
         }
     }
 }
+
 pub async fn get_group(
     group_id: web::Path<String>,
     session: Session,
@@ -339,6 +349,7 @@ pub async fn get_group(
         }
     }
 }
+
 pub async fn create_group(
     session: Session,
     new_group: web::Json<NewGroup>,
@@ -366,6 +377,7 @@ pub async fn create_group(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn create_chat(
     session: Session,
     new_group: web::Json<NewGroup>,
@@ -396,6 +408,7 @@ pub async fn create_chat(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn unread_messages(session: Session, pool: web::Data<MySqlPool>) -> HttpResponse {
     let logged_in = session.get::<String>("tk");
     match logged_in {
@@ -441,6 +454,7 @@ pub async fn get_messages(
         Err(_) => HttpResponse::Ok().json("Error"),
     }
 }
+
 pub async fn get_users(
     group_id: web::Path<String>,
     session: Session,
