@@ -62,7 +62,7 @@ pub async fn reset_password(
                 Ok(_) => {
                     let message = format!(
                         "Hello please visit http://lokoda.co.uk/update-password/{}",
-                        guid.to_string()
+                        guid
                     );
                     send_email(
                         &record.email,
@@ -112,7 +112,7 @@ pub async fn update_password(
                     let update = update_user_password(&password_hash, &record.id, &pool).await;
                     match update {
                         Ok(_) => {
-                            let message = format!("Hi your password has been changed");
+                            let message = "Hi your password has been changed".to_string();
                             send_email(
                                 &record.email,
                                 "david.g.h.gill@gmail.com",

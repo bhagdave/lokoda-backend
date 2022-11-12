@@ -3,7 +3,7 @@ use actix_web::{HttpResponse, web};
 use sqlx::MySqlPool;
 
 use crate::models::*;
-use crate::models::users::*;
+
 
 pub async fn new_message(
     session: Session,
@@ -21,11 +21,11 @@ pub async fn new_message(
                         let added = messaging::new_message(&user, &new_message, &pool).await;
                         match added {
                             Ok(_) => {
-                                return HttpResponse::Ok().json("Message added");
+                                HttpResponse::Ok().json("Message added")
                             }
                             Err(e) => {
                                 log::error!("Failed to execute query: {:?}", e);
-                                return HttpResponse::InternalServerError().finish();
+                                HttpResponse::InternalServerError().finish()
                             }
                         }
                     } else {
@@ -86,7 +86,7 @@ pub async fn block_contacts(
             match userid {
                 Ok(user) => {
                     for c in &contacts.contacts {
-                        match messaging::block_contact(&user, &c, &pool).await {
+                        match messaging::block_contact(&user, c, &pool).await {
                             Ok(_) => {
                                 log::info!("Contact blocked id:{}", c);
                             }
@@ -194,7 +194,7 @@ pub async fn delete_contacts(
             match userid {
                 Ok(user) => {
                     for c in &contacts.contacts {
-                        match messaging::delete_contact(&user, &c, &pool).await {
+                        match messaging::delete_contact(&user, c, &pool).await {
                             Ok(_) => {
                                 log::info!("Contact removed id:{}", c);
                             }

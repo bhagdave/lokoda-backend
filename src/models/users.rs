@@ -1,4 +1,4 @@
-use actix_web::web;
+
 use actix_web::web::{Data, Json};
 use ammonia::clean;
 use bcrypt::*;
@@ -152,7 +152,7 @@ pub async fn update_bio(
     pool: &Data<MySqlPool>,
 ) -> Result<ProfileData, sqlx::Error> {
     let mut profile = ProfileData::get_profile(user, pool).await;
-    let safe_content = clean(&bio);
+    let safe_content = clean(bio);
     profile.update_bio(&safe_content, pool).await;
     Ok(profile)
 }
@@ -278,12 +278,10 @@ pub async fn create_session_token(id: &str, pool: &Data<MySqlPool>) -> Result<St
     )
         .fetch_one(pool.get_ref())
         .await;
-    match existing_token {
-        Ok(record) => {
-            return Ok(record.token);
-        }
-        Err(_) => {}
+    if let Ok(record) = existing_token {
+        return Ok(record.token);
     }
+
     let token = GUID::rand();
     let insert = sqlx::query!(
         r#"
