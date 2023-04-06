@@ -14,7 +14,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
     let db_pool = Data::new(db_pool);
     let server = HttpServer::new(move || {
         App::new()
-            .wrap(middleware::DefaultHeaders::new().header("Access-Control-Allow-Origin", "*")) // for testing purposes only
+            .wrap(middleware::DefaultHeaders::new().add(("Access-Control-Allow-Origin", "*"))) // for testing purposes only
             .wrap(SessionMiddleware::new(CookieSessionStore::default(), Key::from(&[0; 64])))
             .wrap(Logger::default())
             .route("/health_check", web::get().to(health_check))
