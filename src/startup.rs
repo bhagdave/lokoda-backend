@@ -1,6 +1,6 @@
 use std::net::TcpListener;
 
-use actix_session::{Session, SessionMiddleware,storage:: CookieSessionStore};
+use actix_session::{ SessionMiddleware, storage::CookieSessionStore};
 use actix_web::{App, HttpServer, middleware, web};
 use actix_web::dev::Server;
 use actix_web::middleware::Logger;
