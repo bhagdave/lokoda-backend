@@ -2,7 +2,7 @@ use actix_web::web;
 use futures::stream::futures_unordered::FuturesUnordered;
 use futures::stream::StreamExt;
 use guid_create::GUID;
-use log::error;
+
 use serde::{Deserialize, Serialize};
 use sqlx::mysql::MySqlQueryResult;
 use sqlx::MySqlPool;
@@ -101,7 +101,7 @@ pub async fn new_message(
     let mut group = Group::get_group(&new_message.group_id, pool).await;
     if group.chat.unwrap() == 1 {
         log::info!("NEW_MESSAGE:We have a chat");
-        group.get_all_users(&pool).await;
+        group.get_all_users(pool).await;
         match &group.users {
             Some(users) => {
                 for (_pos, e) in users.iter().enumerate() {
@@ -119,7 +119,7 @@ pub async fn new_message(
                         if blocked {
                             log::info!("NEW_MESSAGE:BLOCKED by recipient {}", &e.id);
                             return group
-                                .add_new_message(&user, &new_message.message, pool)
+                                .add_new_message(user, &new_message.message, pool)
                                 .await;
                         } else {
                             log::info!("NEW_MESSAGE:MADE GROUP {} all join in", group.id);
@@ -148,7 +148,7 @@ pub async fn new_message(
         }
     }
     group
-        .add_new_message(&user, &new_message.message, pool)
+        .add_new_message(user, &new_message.message, pool)
         .await
 }
 
@@ -180,17 +180,17 @@ pub async fn get_users_groups(
         .fetch_all(pool.get_ref())
         .await?;
     rows.iter_mut()
-        .map(|row| row.fetch_messages(&pool))
+        .map(|row| row.fetch_messages(pool))
         .collect::<FuturesUnordered<_>>()
         .collect::<Vec<_>>()
         .await;
     rows.iter_mut()
-        .map(|row| row.get_users(&pool))
+        .map(|row| row.get_users(pool))
         .collect::<FuturesUnordered<_>>()
         .collect::<Vec<_>>()
         .await;
     rows.iter_mut()
-        .map(|row| row.fetch_last_message(&pool))
+        .map(|row| row.fetch_last_message(pool))
         .collect::<FuturesUnordered<_>>()
         .collect::<Vec<_>>()
         .await;
@@ -205,8 +205,8 @@ pub async fn get_group(
 ) -> Result<Group, sqlx::Error> {
     let mut group = Group::get_group(group_id, pool).await;
     group.fetch_messages(pool).await;
-    group.get_users(&pool).await;
-    group.mark_read(&user, &pool).await;
+    group.get_users(pool).await;
+    group.mark_read(user, pool).await;
     Ok(group)
 }
 
@@ -295,15 +295,15 @@ pub async fn create_group(
     new_group: web::Json<NewGroup>,
     pool: &web::Data<MySqlPool>,
 ) -> Result<Group, sqlx::Error> {
-    let mut group = Group::new_group(&new_group.name, false, &pool).await;
-    group.add_new_user(&user, &pool).await?;
+    let mut group = Group::new_group(&new_group.name, false, pool).await;
+    group.add_new_user(user, pool).await?;
     for user_id in &new_group.users {
         let blocked = Group::check_blocked(user_id, user, pool).await;
         if !blocked {
-            group.add_new_user(&user_id, &pool).await?;
+            group.add_new_user(user_id, pool).await?;
         }
     }
-    group.get_users(&pool).await;
+    group.get_users(pool).await;
 
     Ok(group)
 }
@@ -313,15 +313,15 @@ pub async fn create_chat(
     new_group: web::Json<NewGroup>,
     pool: &web::Data<MySqlPool>,
 ) -> Result<Group, sqlx::Error> {
-    let mut group = Group::new_group(&new_group.name, true, &pool).await;
-    group.add_new_user(&user, &pool).await?;
+    let mut group = Group::new_group(&new_group.name, true, pool).await;
+    group.add_new_user(user, pool).await?;
     for user_id in &new_group.users {
         let blocked = Group::check_blocked(user_id, user, pool).await;
         if !blocked {
-            group.add_new_user(&user_id, &pool).await?;
+            group.add_new_user(user_id, pool).await?;
         }
     }
-    group.get_users(&pool).await;
+    group.get_users(pool).await;
 
     Ok(group)
 }
