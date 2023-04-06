@@ -100,7 +100,7 @@ pub async fn get_user_shows(
         SELECT id, user_id, venue, city, day, month, year, status, time, comments
         FROM showdates
         WHERE
-            showdate > now()
+            showdate >= now()
             AND user_id = ?
         ORDER BY showdate
         "#,
