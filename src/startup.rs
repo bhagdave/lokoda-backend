@@ -1,10 +1,11 @@
 use std::net::TcpListener;
 
-use actix_session::CookieSession;
+use actix_session::{ SessionMiddleware, storage::CookieSessionStore};
 use actix_web::{App, HttpServer, middleware, web};
 use actix_web::dev::Server;
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
+use actix_web::cookie::Key;
 use sqlx::MySqlPool;
 
 use crate::routes::*;
@@ -14,7 +15,7 @@ pub fn run(listener: TcpListener, db_pool: MySqlPool) -> Result<Server, std::io:
     let server = HttpServer::new(move || {
         App::new()
             .wrap(middleware::DefaultHeaders::new().header("Access-Control-Allow-Origin", "*")) // for testing purposes only
-            .wrap(CookieSession::signed(&[0; 32]).secure(false))
+            .wrap(SessionMiddleware::new(CookieSessionStore::default(), Key::from(&[0; 64])))
             .wrap(Logger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/discover", web::get().to(discover_index))
