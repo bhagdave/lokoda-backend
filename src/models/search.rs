@@ -1,6 +1,7 @@
 use actix_web::web;
 use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
+use sqlx::FromRow;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Search {
@@ -10,7 +11,7 @@ pub struct Search {
     genre: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(sqlx::FromRow, Deserialize, Serialize, Debug)]
 pub struct Results {
     id: String,
     account_type: String,
@@ -25,19 +26,21 @@ pub async fn do_search(
     form: &web::Json<Search>,
     pool: &web::Data<MySqlPool>,
 ) -> Result<Vec<Results>, sqlx::Error> {
-    sqlx::query_as!(Results,
+    let results: Vec<Results> = sqlx::query_as(
         r#"
-            SELECT id,account_type,image_url,avatar_url,name, location, json_extract(genres, '$') as genres
+            SELECT id,account_type,image_url,avatar_url, location,name, json_extract(genres, '$') as genres
             FROM vw_discover
             WHERE (? = account_type)
             OR (? like location)
             OR (? like name)
             OR (find_in_set(?, genres))
-        "#,
-        form.account_type,
-        form.location,
-        form.name,
-        form.genre,
-    ).fetch_all(pool.get_ref())
-        .await
+        "#)
+    .bind(&form.account_type)
+    .bind(&form.location)
+    .bind(&form.name)
+    .bind(&form.genre)
+    .fetch_all(pool.get_ref())
+    .await
+    .unwrap();
+    Ok(results)
 }
