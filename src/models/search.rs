@@ -1,7 +1,7 @@
 use actix_web::web;
 use serde::{Deserialize, Serialize};
 use sqlx::MySqlPool;
-use sqlx::FromRow;
+
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Search {
