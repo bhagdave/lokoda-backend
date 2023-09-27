@@ -1,6 +1,5 @@
 use actix_web::web;
 use futures::stream::futures_unordered::FuturesUnordered;
-use futures::stream::StreamExt;
 use guid_create::GUID;
 
 use serde::{Deserialize, Serialize};
