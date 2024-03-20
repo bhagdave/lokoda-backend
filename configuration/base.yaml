@@ -5,8 +5,8 @@ application:
 database:
     host: "localhost"
     port: 3306
-    username: "root"
-    password: "h6redmine"
+    username: "lokoda"
+    password: "password"
     database_name: "lokoda"
 email:
     host: "smtp.mailtrap.io"
