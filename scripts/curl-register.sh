@@ -1,2 +1,0 @@
-curl -vv http://127.0.0.1:8888/register -H "Content-Type: application/json" --data '{"email":"dave.gill@example.com", "name":"daves", "password":"password", "account_type":"Artist", "location":"Birmingham"}'
-#curl -vv http://lokoda.co.uk/api/register -H "Content-Type: application/json" --data '{"email":"davegill@example.com", "name":"daves-BAND", "password":"password", "account_type":"Artist","location":"Solihull"}' 
