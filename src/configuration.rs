@@ -47,7 +47,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 
     settings.merge(config::Environment::with_prefix("app").separator("__"))?;
 
-    settings.try_into()
+    settings.try_deserialize()
 }
 
 pub enum Environment {
